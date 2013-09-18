@@ -1,0 +1,367 @@
+CCS PCM C Compiler, Version 4.105, 5967               17-Sep-13 21:53
+
+               Filename: C:\PICC\projects\Microchip Pic Stuff\test\serialTest\serialTest.lst
+
+               ROM used: 491 words (12%)
+                         Largest free fragment is 2048
+               RAM used: 16 (6%) at main() level
+                         20 (8%) worst case
+               Stack:    3 worst case (2 in main + 1 for interrupts)
+
+*
+0000:  MOVLW  01
+0001:  MOVWF  0A
+0002:  GOTO   169
+0003:  NOP
+0004:  MOVWF  7F
+0005:  SWAPF  03,W
+0006:  CLRF   03
+0007:  MOVWF  25
+0008:  MOVF   7F,W
+0009:  MOVWF  24
+000A:  MOVF   0A,W
+000B:  MOVWF  2B
+000C:  CLRF   0A
+000D:  SWAPF  24,F
+000E:  MOVF   04,W
+000F:  MOVWF  26
+0010:  MOVF   20,W
+0011:  MOVWF  27
+0012:  MOVF   21,W
+0013:  MOVWF  28
+0014:  MOVF   22,W
+0015:  MOVWF  29
+0016:  MOVF   23,W
+0017:  MOVWF  2A
+0018:  BCF    03.7
+0019:  BCF    03.5
+001A:  BTFSS  0B.3
+001B:  GOTO   01E
+001C:  BTFSC  0B.0
+001D:  GOTO   02F
+001E:  MOVF   26,W
+001F:  MOVWF  04
+0020:  MOVF   27,W
+0021:  MOVWF  20
+0022:  MOVF   28,W
+0023:  MOVWF  21
+0024:  MOVF   29,W
+0025:  MOVWF  22
+0026:  MOVF   2A,W
+0027:  MOVWF  23
+0028:  MOVF   2B,W
+0029:  MOVWF  0A
+002A:  SWAPF  25,W
+002B:  MOVWF  03
+002C:  SWAPF  7F,F
+002D:  SWAPF  7F,W
+002E:  RETFIE
+002F:  BCF    0A.3
+0030:  GOTO   031
+.................... /***********************************************************************  
+....................  * Author:  Alan Curley 
+....................  * Date:    12 SEP 2013 
+....................  * Program: serialTest.C            Version:    1.0 
+....................  * Purpose:    This program is a simple test program that tests and outlines 
+....................  *             a program that will communicate with the PicKit2 programmer 
+....................  *             via the P1 connector using the LPC Demo board. 
+....................  *             This way, the PicKit can be left connected to the programming 
+....................  *             port for programming and serial communication testing. 
+....................  *              - Added interrupt for driving LEDs  to determine what happens 
+....................  *                to serial output. 
+....................  ***********************************************************************/ 
+.................... #include <16F690.h> 
+.................... //////// Standard Header file for the PIC16F690 device //////////////// 
+.................... #device PIC16F690 
+.................... #list 
+....................  
+.................... #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN 
+.................... #use    delay(clock=8000000) 
+0154:  MOVLW  2F
+0155:  MOVWF  04
+0156:  BCF    03.7
+0157:  MOVF   00,W
+0158:  BTFSC  03.2
+0159:  GOTO   167
+015A:  MOVLW  02
+015B:  MOVWF  21
+015C:  CLRF   20
+015D:  DECFSZ 20,F
+015E:  GOTO   15D
+015F:  DECFSZ 21,F
+0160:  GOTO   15C
+0161:  MOVLW  97
+0162:  MOVWF  20
+0163:  DECFSZ 20,F
+0164:  GOTO   163
+0165:  DECFSZ 00,F
+0166:  GOTO   15A
+0167:  BCF    0A.3
+0168:  GOTO   1E7 (RETURN)
+.................... #use    rs232(baud=9600,xmit=PIN_A0,rcv=PIN_A1,parity=N,BITS=8,ERRORS) 
+*
+0050:  BSF    03.5
+0051:  BCF    05.0
+0052:  BCF    03.5
+0053:  BCF    05.0
+0054:  MOVLW  08
+0055:  MOVWF  21
+0056:  GOTO   057
+0057:  NOP
+0058:  BSF    21.7
+0059:  GOTO   068
+005A:  BCF    21.7
+005B:  RRF    32,F
+005C:  BTFSC  03.0
+005D:  BSF    05.0
+005E:  BTFSS  03.0
+005F:  BCF    05.0
+0060:  BSF    21.6
+0061:  GOTO   068
+0062:  BCF    21.6
+0063:  DECFSZ 21,F
+0064:  GOTO   05B
+0065:  GOTO   066
+0066:  NOP
+0067:  BSF    05.0
+0068:  MOVLW  3F
+0069:  MOVWF  04
+006A:  DECFSZ 04,F
+006B:  GOTO   06A
+006C:  NOP
+006D:  BTFSC  21.7
+006E:  GOTO   05A
+006F:  BTFSC  21.6
+0070:  GOTO   062
+0071:  RETURN
+....................  
+.................... #USE    FAST_IO(A) 
+.................... #USE    FAST_IO(B) 
+.................... #USE    FAST_IO(C) 
+....................  
+.................... /** 
+....................  * Declare Variables 
+....................  */ 
+....................  
+.................... #define P1_RX                    PIN_A0 
+.................... #define P1_TX                    PIN_A1 
+.................... #define LPC_SW1                  PIN_A3 
+.................... #define EXT_SW1                  PIN_B4 
+.................... #define LPC_DS1                  PIN_C0 
+.................... #define LPC_DS2                  PIN_C1 
+.................... #define LPC_DS3                  PIN_C2 
+.................... #define LPC_DS4                  PIN_C3 
+.................... #define CCP1_PIN                 PIN_C5 
+....................  
+.................... //------------------------- Local Variables ------------------------------ 
+....................  int counterVal;                  // A Counter to demonstrate the functionality 
+....................  boolean LED1;                    // Boolean representing LED1 
+....................  boolean LED2;                    // Boolean representing LED2  
+....................  boolean portBInterrupt;           // Interrupt occurred at Port B 
+....................  
+....................  
+....................  
+.................... /**  
+....................  * Interrupt routine on change of Port RB 
+....................  */ 
+....................   
+.................... #INT_RB 
+.................... void portB_ISR(void) 
+.................... { 
+....................    // Clean and Simple... Toggle the LED. 
+....................    if(!portBInterrupt) 
+*
+0031:  BTFSC  2D.2
+0032:  GOTO   036
+....................    { 
+....................       LED2= !LED2; 
+0033:  MOVLW  02
+0034:  XORWF  2D,F
+....................       portBInterrupt = true; 
+0035:  BSF    2D.2
+....................    } 
+....................     
+.................... } 
+....................  
+....................  
+.................... /** 
+....................  * Main Routine 
+....................  */ 
+0036:  BCF    0B.0
+0037:  BCF    0A.3
+0038:  GOTO   01E
+.................... void main(){ 
+*
+0169:  CLRF   04
+016A:  BCF    03.7
+016B:  MOVLW  1F
+016C:  ANDWF  03,F
+016D:  MOVLW  71
+016E:  BSF    03.5
+016F:  MOVWF  0F
+0170:  MOVF   0F,W
+0171:  BCF    05.0
+0172:  BCF    03.5
+0173:  BSF    05.0
+0174:  BSF    03.6
+0175:  BCF    1F.0
+0176:  BCF    1F.1
+0177:  BCF    1F.2
+0178:  BCF    1F.3
+0179:  BCF    03.6
+017A:  BCF    1F.6
+017B:  MOVLW  00
+017C:  BSF    03.6
+017D:  MOVWF  1E
+017E:  CLRF   19
+017F:  CLRF   1A
+0180:  BSF    03.5
+0181:  CLRF   1E
+0182:  BCF    03.5
+0183:  CLRF   1B
+0184:  BCF    03.6
+0185:  BCF    0D.5
+....................  
+....................    setup_oscillator(OSC_8MHZ);               // set internal oscillator to 8Mhz 
+0186:  MOVLW  71
+0187:  BSF    03.5
+0188:  MOVWF  0F
+0189:  MOVF   0F,W
+....................    set_tris_a(0x3E);                         // setup port a 
+018A:  MOVLW  3E
+018B:  MOVWF  05
+....................    set_tris_b(0x10);                         // Pin B4 input (Interrupt) 
+018C:  MOVLW  10
+018D:  MOVWF  06
+....................    set_tris_c(0x20);                         // setup port c 
+018E:  MOVLW  20
+018F:  MOVWF  07
+....................    setup_adc_ports(NO_ANALOGS|VSS_VDD);      // No Analog signals       
+0190:  BCF    03.5
+0191:  BSF    03.6
+0192:  BCF    1F.0
+0193:  BCF    1F.1
+0194:  BCF    1F.2
+0195:  BCF    1F.3
+0196:  BCF    03.6
+0197:  BCF    1F.6
+0198:  MOVLW  00
+0199:  BSF    03.6
+019A:  MOVWF  1E
+....................    enable_interrupts(INT_RB); 
+019B:  BCF    03.6
+019C:  BSF    0B.3
+019D:  MOVLW  FF
+019E:  BSF    03.6
+019F:  IORWF  16,F
+....................    enable_interrupts(GLOBAL);                // Enable Global Interrupts 
+01A0:  MOVLW  C0
+01A1:  BCF    03.6
+01A2:  IORWF  0B,F
+....................  
+....................    port_a_pullups(TRUE); 
+01A3:  MOVLW  01
+01A4:  BSF    03.5
+01A5:  MOVWF  15
+01A6:  BCF    01.7
+.................... // Setup Default values 
+....................    LED1 = false; 
+01A7:  BCF    03.5
+01A8:  BCF    2D.0
+....................    LED2 = false; 
+01A9:  BCF    2D.1
+....................    counterVal = 0; 
+01AA:  CLRF   2C
+....................    output_low(LPC_DS1); 
+01AB:  BCF    07.0
+....................    output_low(LPC_DS2); 
+01AC:  BCF    07.1
+....................    output_low(LPC_DS3); 
+01AD:  BCF    07.2
+....................    output_low(LPC_DS4); 
+01AE:  BCF    07.3
+....................     
+....................    while(1){         
+....................       counterVal++;                          // Increment CounterVal 
+01AF:  INCF   2C,F
+....................       if((counterVal&0X80)>0) 
+01B0:  MOVF   2C,W
+01B1:  ANDLW  80
+01B2:  BTFSS  03.2
+....................          counterVal = 0;                     // Manage overflow. 
+01B3:  CLRF   2C
+....................        
+....................       printf("Counter at %2u \r\n",counterVal);    // Print out the counter 
+01B4:  MOVLW  39
+01B5:  BSF    03.6
+01B6:  MOVWF  0D
+01B7:  MOVLW  00
+01B8:  MOVWF  0F
+01B9:  BCF    03.0
+01BA:  MOVLW  0B
+01BB:  BCF    03.6
+01BC:  MOVWF  2E
+01BD:  GOTO   072
+01BE:  MOVF   2C,W
+01BF:  MOVWF  2E
+01C0:  MOVLW  11
+01C1:  MOVWF  2F
+01C2:  GOTO   0D7
+01C3:  MOVLW  20
+01C4:  MOVWF  32
+01C5:  CALL   050
+01C6:  MOVLW  0D
+01C7:  MOVWF  32
+01C8:  CALL   050
+01C9:  MOVLW  0A
+01CA:  MOVWF  32
+01CB:  CALL   050
+....................       LED1 = !LED1; 
+01CC:  MOVLW  01
+01CD:  XORWF  2D,F
+....................      
+....................       // Output the Value of LED1 to ... LED1 funnily enough. 
+....................       output_bit(LPC_DS1,LED1); 
+01CE:  BTFSC  2D.0
+01CF:  GOTO   1D2
+01D0:  BCF    07.0
+01D1:  GOTO   1D3
+01D2:  BSF    07.0
+....................       output_bit(LPC_DS2,LED2); 
+01D3:  BTFSC  2D.1
+01D4:  GOTO   1D7
+01D5:  BCF    07.1
+01D6:  GOTO   1D8
+01D7:  BSF    07.1
+....................        
+....................       if(portBInterrupt) 
+01D8:  BTFSS  2D.2
+01D9:  GOTO   1E2
+....................       { 
+....................          printf("Port B interrupt Detected\r\n"); 
+01DA:  MOVLW  42
+01DB:  BSF    03.6
+01DC:  MOVWF  0D
+01DD:  MOVLW  00
+01DE:  MOVWF  0F
+01DF:  BCF    03.6
+01E0:  GOTO   10D
+....................          portBInterrupt = false; 
+01E1:  BCF    2D.2
+....................       } 
+....................        
+....................       delay_ms(1000);                        // Delay a second.       
+01E2:  MOVLW  04
+01E3:  MOVWF  2E
+01E4:  MOVLW  FA
+01E5:  MOVWF  2F
+01E6:  GOTO   154
+01E7:  DECFSZ 2E,F
+01E8:  GOTO   1E4
+....................    } 
+01E9:  GOTO   1AF
+.................... } 
+01EA:  SLEEP
+
+Configuration Fuses:
+   Word  1: 33D4   INTRC_IO NOPROTECT BROWNOUT NOMCLR NOCPD NOWDT NOPUT NOIESO NOFCMEN

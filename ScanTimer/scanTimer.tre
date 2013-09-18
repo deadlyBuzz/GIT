@@ -1,0 +1,8 @@
+ÀÄscanTimer
+   ÃÄMAIN  0/128  Ram=0
+   ³  ÃÄ??0??
+   ³  ÀÄ@PSTRINGC7_60  0/71  Ram=3
+   ³     ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³     ÀÄ@PUTCHAR_1_  0/34  Ram=1
+   ÃÄCCP1_isr  0/48  Ram=0
+   ÀÄRTCC_isr  0/13  Ram=1

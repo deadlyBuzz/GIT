@@ -1,0 +1,80 @@
+004-005 @READ_PROGRAM_MEMORY8.P1
+015     CCP_1_LOW
+015     CCP_1
+016     CCP_1_HIGH
+020     @SCRATCH
+021     @SCRATCH
+021     _RETURN_
+022     @SCRATCH
+023     @SCRATCH
+024     @INTERRUPT_AREA
+025     @INTERRUPT_AREA
+026     @INTERRUPT_AREA
+027     @INTERRUPT_AREA
+028     @INTERRUPT_AREA
+029     @INTERRUPT_AREA
+02A     @INTERRUPT_AREA
+02B     @INTERRUPT_AREA
+02C.0   FallingEdge
+02C.1   ignoreInterrupt
+02C.2   resetInterrupts
+02C.3   LED1
+02C.4   LED2
+02C.5   LED3
+02C.6   LED4
+02C.7   printData
+02D     timer0_re
+02E     timer0_fe
+02F     timer0_of
+030     re_to_fe
+031     @PSTRINGC7_60.@SCRATCH1
+032     @PSTRINGC7_60.@SCRATCH2
+033     @PSTRINGC7_60.@SCRATCH3
+034     @PUTCHAR_1_.P1
+035     RTCC_isr.@SCRATCH1
+10D-10E @READ_PROGRAM_MEMORY8.P1
+11B.6   C2OUT
+11B.7   C1OUT
+
+ROM Allocation:
+007F  @PUTCHAR_1_
+0039  CCP1_isr
+0069  RTCC_isr
+00E8  MAIN
+0076  @const83
+00A1  @PSTRINGC7_60
+00E8  @cinit
+
+
+User Memory space: 
+
+User Memory space: 
+
+Project Directory:
+    C:\PICC\projects\Microchip Pic Stuff\ScanTimer\
+
+Project Files:
+    scanTimer.c
+    ..\..\..\devices\16F690.h
+
+Units:
+    C:\PICC\projects\Microchip Pic Stuff\ScanTimer\scanTimer (main)
+
+Compiler Settings:
+    Processor:      PIC16F690
+    Pointer Size:   16
+    ADC Range:      0-255
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+
+Output Files:
+    Errors:      scanTimer.err
+    Ext Symbols: scanTimer.esym
+    INHX8:       scanTimer.hex
+    Symbols:     scanTimer.sym
+    List:        scanTimer.lst
+    Debug/COFF:  scanTimer.cof
+    Project:     scanTimer.PJT
+    Call Tree:   scanTimer.tre
+    Statistics:  scanTimer.sta

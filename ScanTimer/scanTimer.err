@@ -1,0 +1,4 @@
+>>> Warning 204 "scanTimer.c" Line 96(1,1): Condition always FALSE
+>>> Warning 203 "scanTimer.c" Line 166(1,1): Condition always TRUE
+      Memory usage:   ROM=9%      RAM=7% - 9%
+      0 Errors,  2 Warnings.

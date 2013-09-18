@@ -1,0 +1,499 @@
+CCS PCM C Compiler, Version 4.105, 5967               17-Sep-13 21:13
+
+               Filename: C:\PICC\projects\Microchip Pic Stuff\ScanTimer\scanTimer.lst
+
+               ROM used: 360 words (9%)
+                         Largest free fragment is 2048
+               RAM used: 18 (7%) at main() level
+                         23 (9%) worst case
+               Stack:    3 worst case (2 in main + 1 for interrupts)
+
+*
+0000:  MOVLW  00
+0001:  MOVWF  0A
+0002:  GOTO   0E8
+0003:  NOP
+0004:  MOVWF  7F
+0005:  SWAPF  03,W
+0006:  CLRF   03
+0007:  MOVWF  25
+0008:  MOVF   7F,W
+0009:  MOVWF  24
+000A:  MOVF   0A,W
+000B:  MOVWF  2B
+000C:  CLRF   0A
+000D:  SWAPF  24,F
+000E:  MOVF   04,W
+000F:  MOVWF  26
+0010:  MOVF   20,W
+0011:  MOVWF  27
+0012:  MOVF   21,W
+0013:  MOVWF  28
+0014:  MOVF   22,W
+0015:  MOVWF  29
+0016:  MOVF   23,W
+0017:  MOVWF  2A
+0018:  BCF    03.7
+0019:  BCF    03.5
+001A:  BTFSS  0B.5
+001B:  GOTO   01E
+001C:  BTFSC  0B.2
+001D:  GOTO   035
+001E:  MOVLW  8C
+001F:  MOVWF  04
+0020:  BTFSS  00.2
+0021:  GOTO   024
+0022:  BTFSC  0C.2
+0023:  GOTO   037
+0024:  MOVF   26,W
+0025:  MOVWF  04
+0026:  MOVF   27,W
+0027:  MOVWF  20
+0028:  MOVF   28,W
+0029:  MOVWF  21
+002A:  MOVF   29,W
+002B:  MOVWF  22
+002C:  MOVF   2A,W
+002D:  MOVWF  23
+002E:  MOVF   2B,W
+002F:  MOVWF  0A
+0030:  SWAPF  25,W
+0031:  MOVWF  03
+0032:  SWAPF  7F,F
+0033:  SWAPF  7F,W
+0034:  RETFIE
+0035:  BCF    0A.3
+0036:  GOTO   069
+0037:  BCF    0A.3
+0038:  GOTO   039
+.................... /***********************************************************************  
+....................  * Author:  Alan Curley 
+....................  * Date:    11 SEP 2013 
+....................  * Program: scanTimer.C            Version:    1.0 
+....................  * Purpose:    Fire off an interrupt on a rising edge of CCP1 and Measure 
+....................  *             when the falling edge is detected (Another interrupt) 
+....................  *             <<<<Currently fires off interrupts correctly as indicated by LED>>>>> 
+....................  *      Added Serial interface as outlined in SERIALTEST.C - Jargon 
+....................  *       coming out.  UNknown why.  Need pullup resistors / XTal? 
+....................  ***********************************************************************/ 
+.................... #include <16F690.h> 
+.................... //////// Standard Header file for the PIC16F690 device //////////////// 
+.................... #device PIC16F690 
+.................... #list 
+....................  
+.................... #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN 
+.................... #use    delay(clock=8000000) 
+.................... #use    rs232(baud=9600,xmit=PIN_A0,rcv=PIN_A1,parity=N,BITS=8,ERRORS) 
+*
+007F:  BSF    03.5
+0080:  BCF    05.0
+0081:  BCF    03.5
+0082:  BCF    05.0
+0083:  MOVLW  08
+0084:  MOVWF  21
+0085:  GOTO   086
+0086:  NOP
+0087:  BSF    21.7
+0088:  GOTO   097
+0089:  BCF    21.7
+008A:  RRF    34,F
+008B:  BTFSC  03.0
+008C:  BSF    05.0
+008D:  BTFSS  03.0
+008E:  BCF    05.0
+008F:  BSF    21.6
+0090:  GOTO   097
+0091:  BCF    21.6
+0092:  DECFSZ 21,F
+0093:  GOTO   08A
+0094:  GOTO   095
+0095:  NOP
+0096:  BSF    05.0
+0097:  MOVLW  3F
+0098:  MOVWF  04
+0099:  DECFSZ 04,F
+009A:  GOTO   099
+009B:  NOP
+009C:  BTFSC  21.7
+009D:  GOTO   089
+009E:  BTFSC  21.6
+009F:  GOTO   091
+00A0:  RETURN
+....................  
+.................... #USE    FAST_IO(A) 
+.................... #USE    FAST_IO(B) 
+.................... #USE    FAST_IO(C) 
+....................  
+....................  
+.................... /****************************************************************************** 
+....................  To Measure the pulse width. 
+....................  (Taken from the Microchip document CCP & ECCP Tips and tricks) 
+....................  
+.................... | 
+.................... | 
+.................... |            |<---------W------------>| 
+.................... | 
+.................... |            -------------------------- 
+.................... |            |                        | 
+.................... |            |                        | 
+.................... |            |                        | 
+.................... |            |                        | 
+.................... |------------|                        |----------------------------- 
+.................... |           t1                        t2 
+.................... | 
+.................... L----------------------------------------------------------------------------- 
+....................  
+.................... 1. Configure control bits CCPxM3:CCPxM0  
+.................... (CCPxCON<3:0>) to capture every rising  
+.................... edge of the waveform. 
+.................... 2. Configure Timer1 prescaler so that Timer1 will  
+.................... run WMAX without overflowing. 
+.................... 3. Enable the CCP interrupt (CCPxIE bit). 
+.................... 4. When CCP interrupt occurs, save the captured  
+.................... timer value (t1) and reconfigure control bits to  
+.................... capture every falling edge. 
+.................... 5. When CCP interrupt occurs again, subtract  
+.................... saved value (t1) from current captured value  
+.................... (t2) – this result is the pulse width (W). 
+.................... 6. Reconfigure control bits to capture the next  
+.................... rising edge and start process all over again  
+.................... (repeat steps 3 through 6) 
+....................  
+.................... ******************************************************************************/ 
+....................  
+....................  
+.................... /** 
+....................  * Declare variables  
+....................  */ 
+.................... //------------------------- I/O Names ------------------------------------ 
+.................... #define P1_RX                    PIN_A0 
+.................... #define P1_TX                    PIN_A1 
+.................... #define LPC_SW1                  PIN_A3 
+.................... #define LPC_DS1                  PIN_C0 
+.................... #define LPC_DS2                  PIN_C1 
+.................... #define LPC_DS3                  PIN_C2 
+.................... #define LPC_DS4                  PIN_C3 
+.................... #define CCP1_PIN                 PIN_C5 
+....................  
+.................... //------------------------- Local Variables ------------------------------ 
+.................... boolean FallingEdge;             // memory to determine if we're checking for a Rising or Falling edge 
+.................... boolean ignoreInterrupt;         // Memory to set ignore interrupt after RE / FE is updated. 
+.................... boolean resetInterrupts;         // A Flag to reset the interrupts- cause samples have it. 
+....................  
+.................... boolean LED1;                    // Boolean representing LED1` 
+.................... boolean LED2;                    // Boolean representing LED2 
+.................... boolean LED3;                    // Boolean representing LED3 
+.................... boolean LED4;                    // Boolean representing LED4 
+.................... boolean printData;               // Flag to print the data. 
+....................  
+.................... int timer0_re;              // timer0 at the time of the rising edge 
+.................... int timer0_fe;              // timer0 at the time of the falling edge 
+.................... int timer0_of;              // timer0 overflow count. 
+.................... int re_to_fe;               // Resulting difference between rising and falling edge 
+....................  
+....................  
+.................... /** 
+....................  * This is the interrupt routine that occurs when a rising edge is detected 
+....................  * in the CCP module. 
+....................  */ 
+.................... #INT_CCP1 
+.................... void  CCP1_isr(void)  
+.................... { 
+....................    LED4= !LED4; 
+*
+0039:  MOVLW  40
+003A:  XORWF  2C,F
+....................    if(false){//ignoreInterrupt){ 
+....................       ignoreInterrupt = 0; 
+....................    } 
+....................    else{ 
+....................       if(fallingEdge){ 
+003B:  BTFSS  2C.0
+003C:  GOTO   053
+....................          setup_ccp1(CCP_CAPTURE_RE);               // CCP set up for rising edge capture. 
+003D:  CLRF   17
+003E:  MOVLW  05
+003F:  MOVWF  17
+0040:  CLRF   1C
+0041:  CLRF   1D
+0042:  MOVLW  01
+0043:  BSF    03.5
+0044:  BSF    03.6
+0045:  MOVWF  1D
+....................          ignoreInterrupt = 1;          
+0046:  BCF    03.5
+0047:  BCF    03.6
+0048:  BSF    2C.1
+....................          LED2 = !(LED2); 
+0049:  MOVLW  10
+004A:  XORWF  2C,F
+....................          timer0_re = CCP_1;                        // Store the timer value 
+004B:  MOVF   15,W
+004C:  MOVWF  2D
+....................          re_to_fe = timer0_re - timer0_fe;         // Calculate the Difference.          
+004D:  MOVF   2E,W
+004E:  SUBWF  2D,W
+004F:  MOVWF  30
+....................          fallingEdge = false; 
+0050:  BCF    2C.0
+....................          printData = true; 
+0051:  BSF    2C.7
+....................       } 
+....................       else{//Rising edge. 
+0052:  GOTO   065
+....................          setup_ccp1(CCP_CAPTURE_FE); 
+0053:  CLRF   17
+0054:  MOVLW  04
+0055:  MOVWF  17
+0056:  CLRF   1C
+0057:  CLRF   1D
+0058:  MOVLW  01
+0059:  BSF    03.5
+005A:  BSF    03.6
+005B:  MOVWF  1D
+....................          ignoreInterrupt = 1; 
+005C:  BCF    03.5
+005D:  BCF    03.6
+005E:  BSF    2C.1
+....................          LED3 = !(LED3); 
+005F:  MOVLW  20
+0060:  XORWF  2C,F
+....................          timer0_of = 0;                           // Reset the value of the overflow. 
+0061:  CLRF   2F
+....................          timer0_re = CCP_1;                       // Store the timer value. 
+0062:  MOVF   15,W
+0063:  MOVWF  2D
+....................          fallingEdge = true; 
+0064:  BSF    2C.0
+....................       } 
+....................    } 
+....................     resetInterrupts = true; 
+0065:  BSF    2C.2
+.................... } 
+....................  
+.................... /** 
+....................  * This is the interrupt routine that occirs when Timer0 overflows 
+....................  */ 
+0066:  BCF    0C.2
+0067:  BCF    0A.3
+0068:  GOTO   024
+.................... #INT_RTCC 
+.................... void RTCC_isr(void) 
+.................... { 
+....................    // Toggle LED1 in the Low Pin Count Demo board. 
+....................    LED1 = (timer0_of & 0X40)>0; 
+0069:  BCF    2C.3
+006A:  MOVF   2F,W
+006B:  ANDLW  40
+006C:  BTFSS  03.2
+006D:  BSF    2C.3
+....................    timer0_of++; 
+006E:  INCF   2F,F
+....................    if(timer0_of>=0X80) 
+006F:  MOVF   2F,W
+0070:  SUBLW  7F
+0071:  BTFSS  03.0
+....................       timer0_of = 0;    
+0072:  CLRF   2F
+.................... } 
+....................  
+....................  
+.................... /** 
+....................  * Main Routine 
+....................  */ 
+0073:  BCF    0B.2
+0074:  BCF    0A.3
+0075:  GOTO   024
+.................... void main() 
+.................... { 
+*
+00E8:  CLRF   04
+00E9:  BCF    03.7
+00EA:  MOVLW  1F
+00EB:  ANDWF  03,F
+00EC:  MOVLW  71
+00ED:  BSF    03.5
+00EE:  MOVWF  0F
+00EF:  MOVF   0F,W
+00F0:  BCF    05.0
+00F1:  BCF    03.5
+00F2:  BSF    05.0
+00F3:  BSF    03.6
+00F4:  BCF    1F.0
+00F5:  BCF    1F.1
+00F6:  BCF    1F.2
+00F7:  BCF    1F.3
+00F8:  BCF    03.6
+00F9:  BCF    1F.6
+00FA:  MOVLW  00
+00FB:  BSF    03.6
+00FC:  MOVWF  1E
+00FD:  CLRF   19
+00FE:  CLRF   1A
+00FF:  BSF    03.5
+0100:  CLRF   1E
+0101:  BCF    03.5
+0102:  CLRF   1B
+0103:  BCF    03.6
+0104:  BCF    0D.5
+....................  
+....................    /** 
+....................     * Setup I/O, CCP Registers Timers Etc. 
+....................     */     
+....................    setup_adc_ports(NO_ANALOGS|VSS_VDD);      // No Analog signals 
+0105:  BSF    03.6
+0106:  BCF    1F.0
+0107:  BCF    1F.1
+0108:  BCF    1F.2
+0109:  BCF    1F.3
+010A:  BCF    03.6
+010B:  BCF    1F.6
+010C:  MOVLW  00
+010D:  BSF    03.6
+010E:  MOVWF  1E
+....................    setup_timer_0(RTCC_INTERNAL|RTCC_DIV_1); 
+010F:  BSF    03.5
+0110:  BCF    03.6
+0111:  MOVF   01,W
+0112:  ANDLW  C7
+0113:  IORLW  08
+0114:  MOVWF  01
+....................    setup_timer_1(T1_INTERNAL|T1_DIV_BY_4); 
+0115:  MOVLW  25
+0116:  BCF    03.5
+0117:  MOVWF  10
+....................    setup_timer_2(T2_DIV_BY_1,255,16); 
+0118:  MOVLW  78
+0119:  MOVWF  21
+011A:  IORLW  04
+011B:  MOVWF  12
+011C:  MOVLW  FF
+011D:  BSF    03.5
+011E:  MOVWF  12
+....................    setup_ccp1(CCP_CAPTURE_RE);               // CCP set up for rising edge capture. 
+011F:  BCF    03.5
+0120:  CLRF   17
+0121:  MOVLW  05
+0122:  MOVWF  17
+0123:  CLRF   1C
+0124:  CLRF   1D
+0125:  MOVLW  01
+0126:  BSF    03.5
+0127:  BSF    03.6
+0128:  MOVWF  1D
+....................    enable_interrupts(INT_CCP1);              // Enable the CCP Interrupt 
+0129:  BCF    03.6
+012A:  BSF    0C.2
+....................    enable_interrupts(INT_TIMER0);            // Enable real time clock interrupt. 
+012B:  BCF    03.5
+012C:  BSF    0B.5
+....................    enable_interrupts(GLOBAL);                // Enable Global Interrupts 
+012D:  MOVLW  C0
+012E:  IORWF  0B,F
+....................    setup_oscillator(OSC_8MHZ);               // Oscillator clock. 
+012F:  MOVLW  71
+0130:  BSF    03.5
+0131:  MOVWF  0F
+0132:  MOVF   0F,W
+....................     
+....................    // Set up the I/O pins in port A 
+....................    set_tris_a(0XFE);                         // Pin RA3 is the SW input in the LPC Demo board. 
+0133:  MOVLW  FE
+0134:  MOVWF  05
+....................    port_a_pullups(TRUE); 
+0135:  MOVLW  01
+0136:  MOVWF  15
+0137:  BCF    01.7
+....................    //port_c_pullups(TRUE); 
+....................    set_tris_c(0X20);                         // Pin RC5 Input 
+0138:  MOVLW  20
+0139:  MOVWF  07
+....................     
+....................    output_low(LPC_DS1); 
+013A:  BCF    03.5
+013B:  BCF    07.0
+....................    output_low(LPC_DS2); 
+013C:  BCF    07.1
+....................    output_low(LPC_DS3); 
+013D:  BCF    07.2
+....................    output_low(LPC_DS4); 
+013E:  BCF    07.3
+....................     
+....................    // TODO: USER CODE!! 
+....................    while(1){ 
+....................       if(resetInterrupts){ 
+013F:  BTFSS  2C.2
+0140:  GOTO   148
+....................          disable_interrupts(GLOBAL); 
+0141:  BCF    0B.6
+0142:  BCF    0B.7
+0143:  BTFSC  0B.7
+0144:  GOTO   142
+....................          enable_interrupts(GLOBAL); 
+0145:  MOVLW  C0
+0146:  IORWF  0B,F
+....................          resetInterrupts = false; 
+0147:  BCF    2C.2
+....................       } 
+....................        
+....................       if(printData){ 
+0148:  BTFSS  2C.7
+0149:  GOTO   152
+....................       printf("Data Collected.\r\n"); 
+014A:  MOVLW  76
+014B:  BSF    03.6
+014C:  MOVWF  0D
+014D:  MOVLW  00
+014E:  MOVWF  0F
+014F:  BCF    03.6
+0150:  GOTO   0A1
+....................       printData = false; 
+0151:  BCF    2C.7
+....................       } 
+....................     
+....................       if(LED1) 
+0152:  BTFSS  2C.3
+0153:  GOTO   156
+....................          output_high(LPC_DS1); 
+0154:  BSF    07.0
+....................       else 
+0155:  GOTO   157
+....................          output_low(LPC_DS1); 
+0156:  BCF    07.0
+....................  
+....................       if(LED2) 
+0157:  BTFSS  2C.4
+0158:  GOTO   15B
+....................          output_high(LPC_DS2); 
+0159:  BSF    07.1
+....................       else 
+015A:  GOTO   15C
+....................          output_low(LPC_DS2); 
+015B:  BCF    07.1
+....................  
+....................       if(LED3) 
+015C:  BTFSS  2C.5
+015D:  GOTO   160
+....................          output_high(LPC_DS3); 
+015E:  BSF    07.2
+....................       else 
+015F:  GOTO   161
+....................          output_low(LPC_DS3); 
+0160:  BCF    07.2
+....................  
+....................       if(LED4) 
+0161:  BTFSS  2C.6
+0162:  GOTO   165
+....................          output_high(LPC_DS4); 
+0163:  BSF    07.3
+....................       else 
+0164:  GOTO   166
+....................          output_low(LPC_DS4); 
+0165:  BCF    07.3
+....................    } 
+0166:  GOTO   13F
+.................... } 
+0167:  SLEEP
+
+Configuration Fuses:
+   Word  1: 33D4   INTRC_IO NOPROTECT BROWNOUT NOMCLR NOCPD NOWDT NOPUT NOIESO NOFCMEN

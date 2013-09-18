@@ -1,0 +1,49 @@
+
+ROM used: 360 (9%)
+          360 (9%) including unused fragments
+
+          1 Average locations per line
+          6 Average locations per statement
+
+RAM used: 18 (7%) at main() level
+          23 (9%) worst case
+
+Stack used: 3 worst case (out of 8 total available)
+
+Lines Stmts  %   Files
+----- ----- ---  -----
+  199    65 100  scanTimer.c
+  394     0   0  ..\..\..\devices\16F690.h
+----- -----
+  593    65 Total
+
+Page ROM  %  RAM   Vol Diff  Functions:
+---- --- --- ---   --- ----  ----------
+0     34   9   1             @PUTCHAR_1_
+0     48  13   0   475  3.8  CCP1_isr
+0     13   4   1   105  3.8  RTCC_isr
+0    128  36   0   992  4.3  MAIN
+0      9   2   0             @const83
+0     71  20   3             @PSTRINGC7_60
+
+Program metrics:
+    Functions               3
+    Statements              65
+    Comments                183
+    Volume (V)              1928
+    Difficilty (D)          12.0
+    Effort to implement (E) 23074
+    Time to implement (T)   21 minutes
+    Est Delivered Bugs (B)  0
+    Cyclomatic Complexity   9
+    Maintainability (MI)    64
+
+ Segment     Used  Free
+-----------  ----  ----
+00000-00003     4  0  
+00004-00038    53  0  
+00039-007FF   303  1688  
+00800-00FFF     0  2048  
+
+
+

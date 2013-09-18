@@ -1,0 +1,25 @@
+[PROJECT]
+Target=C:\PICC\projects\Microchip Pic Stuff\ScanTimer\scanTimer.hex
+Development_Mode=
+Processor_Text=PIC16F690
+ToolSuite=CCS
+Processor=0x6690
+[C:\PICC\projects\Microchip Pic Stuff\ScanTimer\scanTimer]
+Type=4
+Path=
+FileList=
+BuildTool=
+OptionString=
+AdditionalOptionString=
+[mru-list]
+1=C:\PICC\projects\Microchip Pic Stuff\ScanTimer\scanTimer.c
+[Windows]
+0=0000 %S 0 0 796 451 3 0
+[Units]
+Link=0
+Count=1
+1=C:\PICC\projects\Microchip Pic Stuff\ScanTimer\scanTimer
+[Opened Files]
+1=..\test\serialTest\serialTest.c
+2=
+3=

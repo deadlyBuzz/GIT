@@ -1,0 +1,86 @@
+004-005 @READ_PROGRAM_MEMORY8.P1
+015     CCP_1_LOW
+015     CCP_1
+016     CCP_1_HIGH
+020     @SCRATCH
+021     @SCRATCH
+021     _RETURN_
+022     @SCRATCH
+023     @SCRATCH
+024     @INTERRUPT_AREA
+025     @INTERRUPT_AREA
+026     @INTERRUPT_AREA
+027     @INTERRUPT_AREA
+028     @INTERRUPT_AREA
+029     @INTERRUPT_AREA
+02A     @INTERRUPT_AREA
+02B     @INTERRUPT_AREA
+02C     counterVal
+02D.0   LED1
+02D.1   LED2
+02D.2   portBInterrupt
+02E     @PRINTF_U_60.P1
+02E     @PSTRINGCN7_60.P2
+02E     MAIN.@SCRATCH1
+02E     @PSTRINGC7_60.@SCRATCH1
+02F     @PRINTF_U_60.P1
+02F     @delay_ms1.P2
+02F     @PSTRINGCN7_60.@SCRATCH1
+02F     @PSTRINGC7_60.@SCRATCH2
+030     @DIV88.P1
+030     @PSTRINGCN7_60.@SCRATCH2
+030     @PSTRINGC7_60.@SCRATCH3
+031     @DIV88.P1
+031     @PSTRINGCN7_60.@SCRATCH3
+032     @PUTCHAR_1_.P1
+032     @DIV88.@SCRATCH1
+10D-10E @READ_PROGRAM_MEMORY8.P1
+11B.6   C2OUT
+11B.7   C1OUT
+
+ROM Allocation:
+0154  @delay_ms1
+0050  @PUTCHAR_1_
+0031  portB_ISR
+0169  MAIN
+0039  @const74
+0072  @PSTRINGCN7_60
+00C2  @DIV88
+00D7  @PRINTF_U_60
+0042  @const83
+010D  @PSTRINGC7_60
+0169  @cinit
+
+
+User Memory space: 
+
+User Memory space: 
+
+Project Directory:
+    C:\PICC\projects\Microchip Pic Stuff\test\serialTest\
+
+Project Files:
+    serialTest.c
+    ..\..\..\..\devices\16F690.h
+
+Units:
+    C:\PICC\projects\Microchip Pic Stuff\test\serialTest\serialTest (main)
+
+Compiler Settings:
+    Processor:      PIC16F690
+    Pointer Size:   16
+    ADC Range:      0-255
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+
+Output Files:
+    Errors:      serialTest.err
+    Ext Symbols: serialTest.esym
+    INHX8:       serialTest.hex
+    Symbols:     serialTest.sym
+    List:        serialTest.lst
+    Debug/COFF:  serialTest.cof
+    Project:     serialTest.PJT
+    Call Tree:   serialTest.tre
+    Statistics:  serialTest.sta

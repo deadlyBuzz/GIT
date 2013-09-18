@@ -1,0 +1,20 @@
+ÀÄserialTest
+   ÃÄMAIN  0/130  Ram=1
+   ³  ÃÄ??0??
+   ³  ÃÄ@PSTRINGCN7_60  0/80  Ram=4
+   ³  ³  ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ³  ÀÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ÃÄ@PRINTF_U_60  0/54  Ram=2
+   ³  ³  ÃÄ@DIV88  0/21  Ram=3
+   ³  ³  ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ³  ÃÄ@DIV88  0/21  Ram=3
+   ³  ³  ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ³  ÀÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ÃÄ@PSTRINGC7_60  0/71  Ram=3
+   ³  ³  ÃÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ³  ÀÄ@PUTCHAR_1_  0/34  Ram=1
+   ³  ÀÄ@delay_ms1  0/21  Ram=1
+   ÀÄportB_ISR  0/8  Ram=0
