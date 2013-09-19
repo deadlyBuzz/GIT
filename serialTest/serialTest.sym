@@ -18,7 +18,9 @@
 02C     counterVal
 02D.0   LED1
 02D.1   LED2
-02D.2   portBInterrupt
+02D.2   LED3
+02D.3   portBInterrupt
+02D.4   ccpInterrupt
 02E     @PRINTF_U_60.P1
 02E     @PSTRINGCN7_60.P2
 02E     MAIN.@SCRATCH1
@@ -39,17 +41,19 @@
 11B.7   C1OUT
 
 ROM Allocation:
-0154  @delay_ms1
-0050  @PUTCHAR_1_
-0031  portB_ISR
-0169  MAIN
-0039  @const74
-0072  @PSTRINGCN7_60
-00C2  @DIV88
-00D7  @PRINTF_U_60
-0042  @const83
-010D  @PSTRINGC7_60
-0169  @cinit
+0170  @delay_ms1
+006D  @PUTCHAR_1_
+0039  portB_ISR
+0041  ccp1_ISR
+0185  MAIN
+0049  @const77
+008F  @PSTRINGCN7_60
+00DF  @DIV88
+00F4  @PRINTF_U_60
+0052  @const86
+012A  @PSTRINGC7_60
+0060  @const88
+0185  @cinit
 
 
 User Memory space: 
@@ -57,14 +61,14 @@ User Memory space:
 User Memory space: 
 
 Project Directory:
-    C:\PICC\projects\Microchip Pic Stuff\test\serialTest\
+    C:\Alan\GIT\serialTest\
 
 Project Files:
     serialTest.c
-    ..\..\..\..\devices\16F690.h
+    ..\..\..\PICC\devices\16F690.h
 
 Units:
-    C:\PICC\projects\Microchip Pic Stuff\test\serialTest\serialTest (main)
+    C:\Alan\GIT\serialTest\serialTest (main)
 
 Compiler Settings:
     Processor:      PIC16F690

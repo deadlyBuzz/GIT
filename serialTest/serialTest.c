@@ -1,5 +1,5 @@
 /*********************************************************************** 
- * This works!
+ * This works
  * Author:  Alan Curley
  * Date:    12 SEP 2013
  * Program: serialTest.C            Version:    1.0
@@ -12,6 +12,7 @@
  *                to serial output.
  *              - Added a routine for outputting a string on interrupt from 
  *                port B.
+ *              - Change/Add Capture compare routine to Trigger message send.
  ***********************************************************************/
 #include <16F690.h>
 #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN
@@ -37,13 +38,14 @@
 #define CCP1_PIN                 PIN_C5
 
 //------------------------- Local Variables ------------------------------
- int counterVal;                  // A Counter to demonstrate the functionality
- boolean LED1;                    // Boolean representing LED1
- boolean LED2;                    // Boolean representing LED2 
- boolean portBInterrupt;           // Interrupt occurred at Port B
-
-
-
+ int counterVal;                 // A Counter to demonstrate the functionality
+ boolean LED1;                   // Boolean representing LED1
+ boolean LED2;                   // Boolean representing LED2 
+ boolean LED3;                   // Boolean representing LED3  
+ boolean portBInterrupt;         // Interrupt occurred at Port B
+ boolean ccpInterrupt;           // Interrupt occurred for capture compare.
+                                    
+                                 
 /** 
  * Interrupt routine on change of Port RB
  */
@@ -60,6 +62,20 @@ void portB_ISR(void)
    
 }
 
+/**
+ * Interrupt routine on Capture Compare detection
+ */ 
+#INT_CCP1
+void ccp1_ISR(void)
+{
+   // Clean and simple to start... Toggle another LED.
+   if(!ccpInterrupt)
+   {
+      LED3 = !LED3;
+      ccpInterrupt = true;
+   }
+
+}
 
 /**
  * Main Routine
@@ -67,17 +83,20 @@ void portB_ISR(void)
 void main(){
 
    setup_oscillator(OSC_8MHZ);               // set internal oscillator to 8Mhz
+   setup_ccp1(CCP_CAPTURE_RE);               // CCP set up for rising edge capture.
    set_tris_a(0x3E);                         // setup port a
    set_tris_b(0x10);                         // Pin B4 input (Interrupt)
-   set_tris_c(0x20);                         // setup port c
+   set_tris_c(0x20);                         // setup port c (C5 interrupt pin)
    setup_adc_ports(NO_ANALOGS|VSS_VDD);      // No Analog signals      
    enable_interrupts(INT_RB);
+   enable_interrupts(INT_CCP1);              // Enable Capture Compare Interrupts.
    enable_interrupts(GLOBAL);                // Enable Global Interrupts
 
    port_a_pullups(TRUE);
 // Setup Default values
    LED1 = false;
    LED2 = false;
+   LED3 = false;
    counterVal = 0;
    output_low(LPC_DS1);
    output_low(LPC_DS2);
@@ -95,11 +114,17 @@ void main(){
       // Output the Value of LED1 to ... LED1 funnily enough.
       output_bit(LPC_DS1,LED1);
       output_bit(LPC_DS2,LED2);
+      output_bit(LPC_DS3,LED3);
       
       if(portBInterrupt)
       {
          printf("Port B interrupt Detected\r\n");
          portBInterrupt = false;
+      }
+      if(ccpInterrupt)
+      {
+         printf("CCP interrupt Detected\r\n");
+         ccpInterrupt = false;
       }
       
       delay_ms(1000);                        // Delay a second.      
