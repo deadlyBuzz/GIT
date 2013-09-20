@@ -1,3 +1,6 @@
->>> Warning 203 "serialTest.c" Line 105(1,1): Condition always TRUE
-      Memory usage:   ROM=13%      RAM=6% - 8%
-      0 Errors,  1 Warnings.
+>>> Warning 206 "serialTest.c" Line 97(1,1): Variable of this data type is never greater than this constant
+>>> Warning 204 "serialTest.c" Line 98(1,1): Condition always FALSE
+>>> Warning 203 "serialTest.c" Line 130(1,1): Condition always TRUE
+>>> Warning 202 "serialTest.c" Line 46(6,15): Variable never used:   timer1Val
+      Memory usage:   ROM=17%      RAM=8% - 11%
+      0 Errors,  4 Warnings.

@@ -1,4 +1,5 @@
 /*********************************************************************** 
+ * <<<< Found the issue.>>>>
  * Author:  Alan Curley
  * Date:    12 SEP 2013
  * Program: serialTest.C            Version:    1.0
@@ -12,6 +13,10 @@
  *              - Added a routine for outputting a string on interrupt from 
  *                port B.
  *              - Change/Add Capture compare routine to Trigger message send.
+ *             <<<<  Added the RTCC Interrupts and the RS232 text came out as Jargon.
+ *                   Left the data all the same but disabled the RTCC Interrupts
+ *                   and the Text becomes clear again.
+ *                   HMMMM >>>>
  ***********************************************************************/
 #include <16F690.h>
 #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN
@@ -41,6 +46,10 @@
  boolean LED1;                   // Boolean representing LED1
  boolean LED2;                   // Boolean representing LED2 
  boolean LED3;                   // Boolean representing LED3  
+ int ccpVal;                     // Value contained in the CCP register.
+ int timer1Val;                  // Value representing Timer 01.
+ int timerOflwCount;             // Number of times the timer has overflow                
+ int timerOflwCount1;             // Number of times the timer has overflow                
  boolean portBInterrupt;         // Interrupt occurred at Port B
  boolean ccpInterrupt;           // Interrupt occurred for capture compare.
                                     
@@ -57,8 +66,7 @@ void portB_ISR(void)
    {
       LED2= !LED2;
       portBInterrupt = true;
-   }
-   
+   }   
 }
 
 /**
@@ -72,8 +80,26 @@ void ccp1_ISR(void)
    {
       LED3 = !LED3;
       ccpInterrupt = true;
+      ccpVal = get_timer0();                        // Record the Value of the CCP Register.
    }
+}
 
+/**
+ * Interrupt routine for Timer elapsing
+ */
+#INT_RTCC
+void rtcc_ISR(void)
+{
+   if(timerOflwCount==32765)
+   {
+      timerOflwCount = 0;
+      timerOflwCount1++;
+   }
+   else
+      timerOflwCount++;
+      
+   if(timerOflwCount1 > 32765)
+      timerOflwCount1 = 0;
 }
 
 /**
@@ -82,6 +108,7 @@ void ccp1_ISR(void)
 void main(){
 
    setup_oscillator(OSC_8MHZ);               // set internal oscillator to 8Mhz
+   setup_timer_0(RTCC_INTERNAL|RTCC_DIV_1);  // Set up Timer 1
    setup_ccp1(CCP_CAPTURE_RE);               // CCP set up for rising edge capture.
    set_tris_a(0x3E);                         // setup port a
    set_tris_b(0x10);                         // Pin B4 input (Interrupt)
@@ -89,6 +116,7 @@ void main(){
    setup_adc_ports(NO_ANALOGS|VSS_VDD);      // No Analog signals      
    enable_interrupts(INT_RB);
    enable_interrupts(INT_CCP1);              // Enable Capture Compare Interrupts.
+//   enable_interrupts(INT_RTCC);              // Enable real time counter overflow
    enable_interrupts(GLOBAL);                // Enable Global Interrupts
 
    port_a_pullups(TRUE);
@@ -97,6 +125,7 @@ void main(){
    LED2 = false;
    LED3 = false;
    counterVal = 0;
+   ccpVal = 0;
    output_low(LPC_DS1);
    output_low(LPC_DS2);
    output_low(LPC_DS3);
@@ -122,7 +151,7 @@ void main(){
       }
       if(ccpInterrupt)
       {
-         printf("CCP interrupt Detected\r\n");
+         printf("CCP interrupt Detected: %d\r\n",ccpVal);
          ccpInterrupt = false;
       }
       
