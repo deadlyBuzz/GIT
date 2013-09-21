@@ -21,18 +21,19 @@
 02D.2   LED3
 02D.3   portBInterrupt
 02D.4   ccpInterrupt
+02D.5   risingEdge
 02E     ccpVal
 02F     timer1Val
 030     timerOflwCount
 031     timerOflwCount1
-032     @PRINTF_D_60.P1
+032     @PSTRINGCN7_60.P1
 032     @PRINTF_U_60.P2
-032     @PSTRINGCN7_60.P3
+032     @PRINTF_D_60.P3
 032     MAIN.@SCRATCH1
 032     @PSTRINGC7_60.@SCRATCH1
 033     @delay_ms1.P1
-033     @PRINTF_U_60.P2
-033     @PRINTF_D_60.P3
+033     @PRINTF_D_60.P2
+033     @PRINTF_U_60.P3
 033     @PSTRINGCN7_60.@SCRATCH1
 033     @PSTRINGC7_60.@SCRATCH2
 034     @PSTRINGCN7_60.@SCRATCH2
@@ -51,21 +52,21 @@
 11B.7   C1OUT
 
 ROM Allocation:
-01F1  @delay_ms1
-0089  @PUTCHAR_1_
+0211  @delay_ms1
+00AA  @PUTCHAR_1_
 003F  portB_ISR
 0047  ccp1_ISR
-0051  rtcc_ISR
-0206  MAIN
-0060  @const82
-00AB  @PSTRINGCN7_60
-00FA  @DIV88
-010F  @PRINTF_U_60
-0069  @const91
-0145  @PSTRINGC7_60
-0077  @const93
-018C  @PRINTF_D_60
-0206  @cinit
+0070  rtcc_ISR
+0226  MAIN
+007F  @const83
+00CC  @PSTRINGCN7_60
+011B  @DIV88
+0130  @PRINTF_U_60
+0088  @const92
+0165  @PSTRINGC7_60
+0096  @const94
+01AC  @PRINTF_D_60
+0226  @cinit
 
 
 User Memory space: 

@@ -52,9 +52,10 @@
  int ccpVal;                     // Value contained in the CCP register.
  int timer1Val;                  // Value representing Timer 01.
  int timerOflwCount;             // Number of times the timer has overflow                
- int timerOflwCount1;             // Number of times the timer has overflow                
+ int timerOflwCount1;            // Number of times the timer has overflow                
  boolean portBInterrupt;         // Interrupt occurred at Port B
  boolean ccpInterrupt;           // Interrupt occurred for capture compare.
+ boolean risingEdge;             // Monitoring the Rising edge or Falling edge of CCP?
                                     
                                  
 /** 
@@ -82,8 +83,24 @@ void ccp1_ISR(void)
    if(!ccpInterrupt)
    {
       LED3 = !LED3;
-      ccpInterrupt = true;
-      ccpVal = get_timer0();                        // Record the Value of the CCP Register.
+      //ccpInterrupt = true;                    // Don't want to print untul the falling edge/
+      ccpVal = get_timer0();                    // Record the Value of the CCP Register.
+   }
+   // Add the additional maintenance routine here.
+   if(risingEdge)
+   {                                            // Monitoring the rising edge
+      set_timer0(0);                            // Reset the timer to Zero
+      timerOflwCount = 0;                       // as well as the overflows.
+      timerOflwCount1= 0;
+      setup_ccp1(CCP_CAPTURE_FE);               // CCP set up for falling edge capture.
+      risingEdge = false;                        // Start monitoring the falling edge
+   }
+   else                                         // Monitoring the Falling edge.
+   {
+      ccpInterrupt = true;                      // Main routine to print the results.
+      setup_ccp1(CCP_CAPTURE_RE);               // Start monitoring the Rising Edge again.
+      disable_interrupts(INT_RTCC);             // Disabling the Timer RTCC - No adjust overflows.
+      risingEdge = true;                        // Start monitoring the rising edge
    }
 }
 
@@ -157,7 +174,7 @@ void main(){
       }
       if(ccpInterrupt)
       {
-         printf("CCP interrupt Detected: %d %d %d\r\n",ccpVal,timerOflwCount,timerOflwCount1);
+         printf("CCP interrupt Detected: %d - %d - %u\r\n",timerOflwCount1,timerOflwCount,ccpVal);
          ccpInterrupt = false;
       }
       enable_interrupts(INT_RTCC);           // Re-enable the Timer interrupt
