@@ -1,8 +1,8 @@
-CCS PCM C Compiler, Version 4.105, 5967               20-Sep-13 21:54
+CCS PCM C Compiler, Version 4.105, 5967               21-Sep-13 11:18
 
                Filename: C:\Alan\GIT\serialTest\serialTest.lst
 
-               ROM used: 691 words (17%)
+               ROM used: 716 words (17%)
                          Largest free fragment is 2048
                RAM used: 20 (8%) at main() level
                          28 (11%) worst case
@@ -11,7 +11,7 @@ CCS PCM C Compiler, Version 4.105, 5967               20-Sep-13 21:54
 *
 0000:  MOVLW  02
 0001:  MOVWF  0A
-0002:  GOTO   200
+0002:  GOTO   206
 0003:  NOP
 0004:  MOVWF  7F
 0005:  SWAPF  03,W
@@ -73,7 +73,8 @@ CCS PCM C Compiler, Version 4.105, 5967               20-Sep-13 21:54
 003D:  BCF    0A.3
 003E:  GOTO   03F
 .................... /***********************************************************************  
-....................  * This works 
+....................  * This works! 
+....................  * <<<< Found the issue.>>>> 
 ....................  * Author:  Alan Curley 
 ....................  * Date:    12 SEP 2013 
 ....................  * Program: serialTest.C            Version:    1.0 
@@ -87,6 +88,11 @@ CCS PCM C Compiler, Version 4.105, 5967               20-Sep-13 21:54
 ....................  *              - Added a routine for outputting a string on interrupt from  
 ....................  *                port B. 
 ....................  *              - Change/Add Capture compare routine to Trigger message send. 
+....................  *             <<<<  Added the RTCC Interrupts and the RS232 text came out as Jargon. 
+....................  *                   Left the data all the same but disabled the RTCC Interrupts 
+....................  *                   and the Text becomes clear again. 
+....................  *                   HMMMM >>>>] 
+....................  *              - Disabled & Re-Enabled the RTCC interrupt between printfs.  Works/ 
 ....................  ***********************************************************************/ 
 .................... #include <16F690.h> 
 .................... //////// Standard Header file for the PIC16F690 device //////////////// 
@@ -95,63 +101,63 @@ CCS PCM C Compiler, Version 4.105, 5967               20-Sep-13 21:54
 ....................  
 .................... #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN 
 .................... #use    delay(clock=8000000) 
-01EB:  MOVLW  33
-01EC:  MOVWF  04
-01ED:  BCF    03.7
-01EE:  MOVF   00,W
-01EF:  BTFSC  03.2
-01F0:  GOTO   1FE
-01F1:  MOVLW  02
-01F2:  MOVWF  21
-01F3:  CLRF   20
-01F4:  DECFSZ 20,F
-01F5:  GOTO   1F4
-01F6:  DECFSZ 21,F
-01F7:  GOTO   1F3
-01F8:  MOVLW  97
-01F9:  MOVWF  20
+01F1:  MOVLW  33
+01F2:  MOVWF  04
+01F3:  BCF    03.7
+01F4:  MOVF   00,W
+01F5:  BTFSC  03.2
+01F6:  GOTO   204
+01F7:  MOVLW  02
+01F8:  MOVWF  21
+01F9:  CLRF   20
 01FA:  DECFSZ 20,F
 01FB:  GOTO   1FA
-01FC:  DECFSZ 00,F
-01FD:  GOTO   1F1
-01FE:  BCF    0A.3
-01FF:  GOTO   2AF (RETURN)
+01FC:  DECFSZ 21,F
+01FD:  GOTO   1F9
+01FE:  MOVLW  97
+01FF:  MOVWF  20
+0200:  DECFSZ 20,F
+0201:  GOTO   200
+0202:  DECFSZ 00,F
+0203:  GOTO   1F7
+0204:  BCF    0A.3
+0205:  GOTO   2C8 (RETURN)
 .................... #use    rs232(baud=9600,xmit=PIN_A0,rcv=PIN_A1,parity=N,BITS=8,ERRORS) 
 *
-0082:  BSF    03.5
-0083:  BCF    05.0
-0084:  BCF    03.5
-0085:  BCF    05.0
-0086:  MOVLW  08
-0087:  MOVWF  21
-0088:  GOTO   089
-0089:  NOP
-008A:  BSF    21.7
-008B:  GOTO   09A
-008C:  BCF    21.7
-008D:  RRF    38,F
-008E:  BTFSC  03.0
-008F:  BSF    05.0
-0090:  BTFSS  03.0
-0091:  BCF    05.0
-0092:  BSF    21.6
-0093:  GOTO   09A
-0094:  BCF    21.6
-0095:  DECFSZ 21,F
-0096:  GOTO   08D
-0097:  GOTO   098
-0098:  NOP
-0099:  BSF    05.0
-009A:  MOVLW  3F
-009B:  MOVWF  04
-009C:  DECFSZ 04,F
-009D:  GOTO   09C
-009E:  NOP
-009F:  BTFSC  21.7
-00A0:  GOTO   08C
-00A1:  BTFSC  21.6
-00A2:  GOTO   094
-00A3:  RETURN
+0089:  BSF    03.5
+008A:  BCF    05.0
+008B:  BCF    03.5
+008C:  BCF    05.0
+008D:  MOVLW  08
+008E:  MOVWF  21
+008F:  GOTO   090
+0090:  NOP
+0091:  BSF    21.7
+0092:  GOTO   0A1
+0093:  BCF    21.7
+0094:  RRF    38,F
+0095:  BTFSC  03.0
+0096:  BSF    05.0
+0097:  BTFSS  03.0
+0098:  BCF    05.0
+0099:  BSF    21.6
+009A:  GOTO   0A1
+009B:  BCF    21.6
+009C:  DECFSZ 21,F
+009D:  GOTO   094
+009E:  GOTO   09F
+009F:  NOP
+00A0:  BSF    05.0
+00A1:  MOVLW  3F
+00A2:  MOVWF  04
+00A3:  DECFSZ 04,F
+00A4:  GOTO   0A3
+00A5:  NOP
+00A6:  BTFSC  21.7
+00A7:  GOTO   093
+00A8:  BTFSC  21.6
+00A9:  GOTO   09B
+00AA:  RETURN
 ....................  
 .................... #USE    FAST_IO(A) 
 .................... #USE    FAST_IO(B) 
@@ -239,9 +245,9 @@ CCS PCM C Compiler, Version 4.105, 5967               20-Sep-13 21:54
 .................... #INT_RTCC 
 .................... void rtcc_ISR(void) 
 .................... { 
-....................    if(timerOflwCount==32765) 
+....................    if(timerOflwCount==128) 
 0051:  MOVF   30,W
-0052:  SUBLW  FD
+0052:  SUBLW  80
 0053:  BTFSS  03.2
 0054:  GOTO   058
 ....................    { 
@@ -255,249 +261,275 @@ CCS PCM C Compiler, Version 4.105, 5967               20-Sep-13 21:54
 ....................       timerOflwCount++; 
 0058:  INCF   30,F
 ....................        
-....................    if(timerOflwCount1 > 32765) 
+....................    if(timerOflwCount1 > 127) 
+0059:  MOVF   31,W
+005A:  SUBLW  7F
+005B:  BTFSS  03.0
 ....................       timerOflwCount1 = 0; 
+005C:  CLRF   31
 .................... } 
 ....................  
 .................... /** 
 ....................  * Main Routine 
 ....................  */ 
-0059:  BCF    0B.2
-005A:  BCF    0A.3
-005B:  GOTO   028
+005D:  BCF    0B.2
+005E:  BCF    0A.3
+005F:  GOTO   028
 .................... void main(){ 
 *
-0200:  CLRF   04
-0201:  BCF    03.7
-0202:  MOVLW  1F
-0203:  ANDWF  03,F
-0204:  MOVLW  71
-0205:  BSF    03.5
-0206:  MOVWF  0F
-0207:  MOVF   0F,W
-0208:  BCF    05.0
-0209:  BCF    03.5
-020A:  BSF    05.0
-020B:  BSF    03.6
-020C:  BCF    1F.0
-020D:  BCF    1F.1
-020E:  BCF    1F.2
-020F:  BCF    1F.3
-0210:  BCF    03.6
-0211:  BCF    1F.6
-0212:  MOVLW  00
-0213:  BSF    03.6
-0214:  MOVWF  1E
-0215:  CLRF   19
-0216:  CLRF   1A
-0217:  BSF    03.5
-0218:  CLRF   1E
-0219:  BCF    03.5
-021A:  CLRF   1B
-021B:  BCF    03.6
-021C:  BCF    0D.5
+0206:  CLRF   04
+0207:  BCF    03.7
+0208:  MOVLW  1F
+0209:  ANDWF  03,F
+020A:  MOVLW  71
+020B:  BSF    03.5
+020C:  MOVWF  0F
+020D:  MOVF   0F,W
+020E:  BCF    05.0
+020F:  BCF    03.5
+0210:  BSF    05.0
+0211:  BSF    03.6
+0212:  BCF    1F.0
+0213:  BCF    1F.1
+0214:  BCF    1F.2
+0215:  BCF    1F.3
+0216:  BCF    03.6
+0217:  BCF    1F.6
+0218:  MOVLW  00
+0219:  BSF    03.6
+021A:  MOVWF  1E
+021B:  CLRF   19
+021C:  CLRF   1A
+021D:  BSF    03.5
+021E:  CLRF   1E
+021F:  BCF    03.5
+0220:  CLRF   1B
+0221:  BCF    03.6
+0222:  BCF    0D.5
 ....................  
 ....................    setup_oscillator(OSC_8MHZ);               // set internal oscillator to 8Mhz 
-021D:  MOVLW  71
-021E:  BSF    03.5
-021F:  MOVWF  0F
-0220:  MOVF   0F,W
+0223:  MOVLW  71
+0224:  BSF    03.5
+0225:  MOVWF  0F
+0226:  MOVF   0F,W
 ....................    setup_timer_0(RTCC_INTERNAL|RTCC_DIV_1);  // Set up Timer 1 
-0221:  MOVF   01,W
-0222:  ANDLW  C7
-0223:  IORLW  08
-0224:  MOVWF  01
+0227:  MOVF   01,W
+0228:  ANDLW  C7
+0229:  IORLW  08
+022A:  MOVWF  01
 ....................    setup_ccp1(CCP_CAPTURE_RE);               // CCP set up for rising edge capture. 
-0225:  BCF    03.5
-0226:  CLRF   17
-0227:  MOVLW  05
-0228:  MOVWF  17
-0229:  CLRF   1C
-022A:  CLRF   1D
-022B:  MOVLW  01
-022C:  BSF    03.5
-022D:  BSF    03.6
-022E:  MOVWF  1D
+022B:  BCF    03.5
+022C:  CLRF   17
+022D:  MOVLW  05
+022E:  MOVWF  17
+022F:  CLRF   1C
+0230:  CLRF   1D
+0231:  MOVLW  01
+0232:  BSF    03.5
+0233:  BSF    03.6
+0234:  MOVWF  1D
 ....................    set_tris_a(0x3E);                         // setup port a 
-022F:  MOVLW  3E
-0230:  BCF    03.6
-0231:  MOVWF  05
+0235:  MOVLW  3E
+0236:  BCF    03.6
+0237:  MOVWF  05
 ....................    set_tris_b(0x10);                         // Pin B4 input (Interrupt) 
-0232:  MOVLW  10
-0233:  MOVWF  06
+0238:  MOVLW  10
+0239:  MOVWF  06
 ....................    set_tris_c(0x20);                         // setup port c (C5 interrupt pin) 
-0234:  MOVLW  20
-0235:  MOVWF  07
+023A:  MOVLW  20
+023B:  MOVWF  07
 ....................    setup_adc_ports(NO_ANALOGS|VSS_VDD);      // No Analog signals       
-0236:  BCF    03.5
-0237:  BSF    03.6
-0238:  BCF    1F.0
-0239:  BCF    1F.1
-023A:  BCF    1F.2
-023B:  BCF    1F.3
-023C:  BCF    03.6
-023D:  BCF    1F.6
-023E:  MOVLW  00
-023F:  BSF    03.6
-0240:  MOVWF  1E
+023C:  BCF    03.5
+023D:  BSF    03.6
+023E:  BCF    1F.0
+023F:  BCF    1F.1
+0240:  BCF    1F.2
+0241:  BCF    1F.3
+0242:  BCF    03.6
+0243:  BCF    1F.6
+0244:  MOVLW  00
+0245:  BSF    03.6
+0246:  MOVWF  1E
 ....................    enable_interrupts(INT_RB); 
-0241:  BCF    03.6
-0242:  BSF    0B.3
-0243:  MOVLW  FF
-0244:  BSF    03.6
-0245:  IORWF  16,F
-....................    enable_interrupts(INT_CCP1);              // Enable Capture Compare Interrupts. 
-0246:  BSF    03.5
 0247:  BCF    03.6
-0248:  BSF    0C.2
-.................... //   enable_interrupts(INT_RTCC);              // Enable real time counter overflow 
+0248:  BSF    0B.3
+0249:  MOVLW  FF
+024A:  BSF    03.6
+024B:  IORWF  16,F
+....................    enable_interrupts(INT_CCP1);              // Enable Capture Compare Interrupts. 
+024C:  BSF    03.5
+024D:  BCF    03.6
+024E:  BSF    0C.2
+....................    enable_interrupts(INT_RTCC);              // Enable real time counter overflow <<<< This is causeing the RS232 issue to go apeshit. 
+024F:  BCF    03.5
+0250:  BSF    0B.5
 ....................    enable_interrupts(GLOBAL);                // Enable Global Interrupts 
-0249:  MOVLW  C0
-024A:  BCF    03.5
-024B:  IORWF  0B,F
+0251:  MOVLW  C0
+0252:  IORWF  0B,F
 ....................  
 ....................    port_a_pullups(TRUE); 
-024C:  MOVLW  01
-024D:  BSF    03.5
-024E:  MOVWF  15
-024F:  BCF    01.7
+0253:  MOVLW  01
+0254:  BSF    03.5
+0255:  MOVWF  15
+0256:  BCF    01.7
+....................  
 .................... // Setup Default values 
 ....................    LED1 = false; 
-0250:  BCF    03.5
-0251:  BCF    2D.0
+0257:  BCF    03.5
+0258:  BCF    2D.0
 ....................    LED2 = false; 
-0252:  BCF    2D.1
+0259:  BCF    2D.1
 ....................    LED3 = false; 
-0253:  BCF    2D.2
+025A:  BCF    2D.2
 ....................    counterVal = 0; 
-0254:  CLRF   2C
+025B:  CLRF   2C
 ....................    ccpVal = 0; 
-0255:  CLRF   2E
+025C:  CLRF   2E
 ....................    output_low(LPC_DS1); 
-0256:  BCF    07.0
+025D:  BCF    07.0
 ....................    output_low(LPC_DS2); 
-0257:  BCF    07.1
+025E:  BCF    07.1
 ....................    output_low(LPC_DS3); 
-0258:  BCF    07.2
+025F:  BCF    07.2
 ....................    output_low(LPC_DS4); 
-0259:  BCF    07.3
+0260:  BCF    07.3
 ....................     
 ....................    while(1){         
+....................        
+....................       disable_interrupts(INT_RTCC);           // Ensure the RTCC Interrupt is disabled. 
+0261:  BCF    0B.5
 ....................       counterVal++;                          // Increment CounterVal 
-025A:  INCF   2C,F
+0262:  INCF   2C,F
 ....................       if((counterVal&0X80)>0) 
-025B:  MOVF   2C,W
-025C:  ANDLW  80
-025D:  BTFSS  03.2
+0263:  MOVF   2C,W
+0264:  ANDLW  80
+0265:  BTFSS  03.2
 ....................          counterVal = 0;                     // Manage overflow. 
-025E:  CLRF   2C
+0266:  CLRF   2C
 ....................        
 ....................       printf("Counter at %2u \r\n",counterVal);    // Print out the counter 
-025F:  MOVLW  5C
-0260:  BSF    03.6
-0261:  MOVWF  0D
-0262:  MOVLW  00
-0263:  MOVWF  0F
-0264:  BCF    03.0
-0265:  MOVLW  0B
-0266:  BCF    03.6
-0267:  MOVWF  32
-0268:  CALL   0A4
-0269:  MOVF   2C,W
-026A:  MOVWF  32
-026B:  MOVLW  11
-026C:  MOVWF  33
-026D:  GOTO   108
-026E:  MOVLW  20
-026F:  MOVWF  38
-0270:  CALL   082
-0271:  MOVLW  0D
-0272:  MOVWF  38
-0273:  CALL   082
-0274:  MOVLW  0A
-0275:  MOVWF  38
-0276:  CALL   082
+0267:  MOVLW  60
+0268:  BSF    03.6
+0269:  MOVWF  0D
+026A:  MOVLW  00
+026B:  MOVWF  0F
+026C:  BCF    03.0
+026D:  MOVLW  0B
+026E:  BCF    03.6
+026F:  MOVWF  32
+0270:  CALL   0AB
+0271:  MOVF   2C,W
+0272:  MOVWF  32
+0273:  MOVLW  11
+0274:  MOVWF  33
+0275:  GOTO   10F
+0276:  MOVLW  20
+0277:  MOVWF  38
+0278:  CALL   089
+0279:  MOVLW  0D
+027A:  MOVWF  38
+027B:  CALL   089
+027C:  MOVLW  0A
+027D:  MOVWF  38
+027E:  CALL   089
 ....................       LED1 = !LED1; 
-0277:  MOVLW  01
-0278:  XORWF  2D,F
+027F:  MOVLW  01
+0280:  XORWF  2D,F
 ....................      
 ....................       // Output the Value of LED1 to ... LED1 funnily enough. 
 ....................       output_bit(LPC_DS1,LED1); 
-0279:  BTFSC  2D.0
-027A:  GOTO   27D
-027B:  BCF    07.0
-027C:  GOTO   27E
-027D:  BSF    07.0
+0281:  BTFSC  2D.0
+0282:  GOTO   285
+0283:  BCF    07.0
+0284:  GOTO   286
+0285:  BSF    07.0
 ....................       output_bit(LPC_DS2,LED2); 
-027E:  BTFSC  2D.1
-027F:  GOTO   282
-0280:  BCF    07.1
-0281:  GOTO   283
-0282:  BSF    07.1
+0286:  BTFSC  2D.1
+0287:  GOTO   28A
+0288:  BCF    07.1
+0289:  GOTO   28B
+028A:  BSF    07.1
 ....................       output_bit(LPC_DS3,LED3); 
-0283:  BTFSC  2D.2
-0284:  GOTO   287
-0285:  BCF    07.2
-0286:  GOTO   288
-0287:  BSF    07.2
+028B:  BTFSC  2D.2
+028C:  GOTO   28F
+028D:  BCF    07.2
+028E:  GOTO   290
+028F:  BSF    07.2
 ....................        
 ....................       if(portBInterrupt) 
-0288:  BTFSS  2D.3
-0289:  GOTO   292
+0290:  BTFSS  2D.3
+0291:  GOTO   29A
 ....................       { 
 ....................          printf("Port B interrupt Detected\r\n"); 
-028A:  MOVLW  65
-028B:  BSF    03.6
-028C:  MOVWF  0D
-028D:  MOVLW  00
-028E:  MOVWF  0F
-028F:  BCF    03.6
-0290:  GOTO   13E
+0292:  MOVLW  69
+0293:  BSF    03.6
+0294:  MOVWF  0D
+0295:  MOVLW  00
+0296:  MOVWF  0F
+0297:  BCF    03.6
+0298:  GOTO   145
 ....................          portBInterrupt = false; 
-0291:  BCF    2D.3
+0299:  BCF    2D.3
 ....................       } 
 ....................       if(ccpInterrupt) 
-0292:  BTFSS  2D.4
-0293:  GOTO   2AA
+029A:  BTFSS  2D.4
+029B:  GOTO   2C2
 ....................       { 
-....................          printf("CCP interrupt Detected: %d\r\n",ccpVal); 
-0294:  MOVLW  73
-0295:  BSF    03.6
-0296:  MOVWF  0D
-0297:  MOVLW  00
-0298:  MOVWF  0F
-0299:  BCF    03.0
-029A:  MOVLW  18
-029B:  BCF    03.6
-029C:  MOVWF  32
-029D:  CALL   0A4
-029E:  MOVF   2E,W
-029F:  MOVWF  32
-02A0:  MOVLW  1F
-02A1:  MOVWF  33
-02A2:  GOTO   185
-02A3:  MOVLW  0D
-02A4:  MOVWF  38
-02A5:  CALL   082
-02A6:  MOVLW  0A
-02A7:  MOVWF  38
-02A8:  CALL   082
+....................          printf("CCP interrupt Detected: %d %d %d\r\n",ccpVal,timerOflwCount,timerOflwCount1); 
+029C:  MOVLW  77
+029D:  BSF    03.6
+029E:  MOVWF  0D
+029F:  MOVLW  00
+02A0:  MOVWF  0F
+02A1:  BCF    03.0
+02A2:  MOVLW  18
+02A3:  BCF    03.6
+02A4:  MOVWF  32
+02A5:  CALL   0AB
+02A6:  MOVF   2E,W
+02A7:  MOVWF  32
+02A8:  MOVLW  1F
+02A9:  MOVWF  33
+02AA:  CALL   18C
+02AB:  MOVLW  20
+02AC:  MOVWF  38
+02AD:  CALL   089
+02AE:  MOVF   30,W
+02AF:  MOVWF  32
+02B0:  MOVLW  1F
+02B1:  MOVWF  33
+02B2:  CALL   18C
+02B3:  MOVLW  20
+02B4:  MOVWF  38
+02B5:  CALL   089
+02B6:  MOVF   31,W
+02B7:  MOVWF  32
+02B8:  MOVLW  1F
+02B9:  MOVWF  33
+02BA:  CALL   18C
+02BB:  MOVLW  0D
+02BC:  MOVWF  38
+02BD:  CALL   089
+02BE:  MOVLW  0A
+02BF:  MOVWF  38
+02C0:  CALL   089
 ....................          ccpInterrupt = false; 
-02A9:  BCF    2D.4
+02C1:  BCF    2D.4
 ....................       } 
-....................        
+....................       enable_interrupts(INT_RTCC);           // Re-enable the Timer interrupt 
+02C2:  BSF    0B.5
 ....................       delay_ms(1000);                        // Delay a second.       
-02AA:  MOVLW  04
-02AB:  MOVWF  32
-02AC:  MOVLW  FA
-02AD:  MOVWF  33
-02AE:  GOTO   1EB
-02AF:  DECFSZ 32,F
-02B0:  GOTO   2AC
+02C3:  MOVLW  04
+02C4:  MOVWF  32
+02C5:  MOVLW  FA
+02C6:  MOVWF  33
+02C7:  GOTO   1F1
+02C8:  DECFSZ 32,F
+02C9:  GOTO   2C5
 ....................    } 
-02B1:  GOTO   25A
+02CA:  GOTO   261
 .................... } 
-02B2:  SLEEP
+02CB:  SLEEP
 
 Configuration Fuses:
    Word  1: 33D4   INTRC_IO NOPROTECT BROWNOUT NOMCLR NOCPD NOWDT NOPUT NOIESO NOFCMEN

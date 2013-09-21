@@ -1,4 +1,5 @@
 /*********************************************************************** 
+ * This works!
  * <<<< Found the issue.>>>>
  * Author:  Alan Curley
  * Date:    12 SEP 2013
@@ -16,7 +17,8 @@
  *             <<<<  Added the RTCC Interrupts and the RS232 text came out as Jargon.
  *                   Left the data all the same but disabled the RTCC Interrupts
  *                   and the Text becomes clear again.
- *                   HMMMM >>>>
+ *                   HMMMM >>>>]
+ *              - Disabled & Re-Enabled the RTCC interrupt between printfs.  Works/
  ***********************************************************************/
 #include <16F690.h>
 #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN
@@ -90,7 +92,7 @@ void ccp1_ISR(void)
 #INT_RTCC
 void rtcc_ISR(void)
 {
-   if(timerOflwCount==32765)
+   if(timerOflwCount==128)
    {
       timerOflwCount = 0;
       timerOflwCount1++;
@@ -98,7 +100,7 @@ void rtcc_ISR(void)
    else
       timerOflwCount++;
       
-   if(timerOflwCount1 > 32765)
+   if(timerOflwCount1 > 127)
       timerOflwCount1 = 0;
 }
 
@@ -116,10 +118,11 @@ void main(){
    setup_adc_ports(NO_ANALOGS|VSS_VDD);      // No Analog signals      
    enable_interrupts(INT_RB);
    enable_interrupts(INT_CCP1);              // Enable Capture Compare Interrupts.
-//   enable_interrupts(INT_RTCC);              // Enable real time counter overflow
+   enable_interrupts(INT_RTCC);              // Enable real time counter overflow <<<< This is causeing the RS232 issue to go apeshit.
    enable_interrupts(GLOBAL);                // Enable Global Interrupts
 
    port_a_pullups(TRUE);
+
 // Setup Default values
    LED1 = false;
    LED2 = false;
@@ -132,6 +135,8 @@ void main(){
    output_low(LPC_DS4);
    
    while(1){        
+      
+      disable_interrupts(INT_RTCC);           // Ensure the RTCC Interrupt is disabled.
       counterVal++;                          // Increment CounterVal
       if((counterVal&0X80)>0)
          counterVal = 0;                     // Manage overflow.
@@ -151,10 +156,10 @@ void main(){
       }
       if(ccpInterrupt)
       {
-         printf("CCP interrupt Detected: %d\r\n",ccpVal);
+         printf("CCP interrupt Detected: %d %d %d\r\n",ccpVal,timerOflwCount,timerOflwCount1);
          ccpInterrupt = false;
       }
-      
+      enable_interrupts(INT_RTCC);           // Re-enable the Timer interrupt
       delay_ms(1000);                        // Delay a second.      
    }
 }

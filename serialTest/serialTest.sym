@@ -51,21 +51,21 @@
 11B.7   C1OUT
 
 ROM Allocation:
-01EB  @delay_ms1
-0082  @PUTCHAR_1_
+01F1  @delay_ms1
+0089  @PUTCHAR_1_
 003F  portB_ISR
 0047  ccp1_ISR
 0051  rtcc_ISR
-0200  MAIN
-005C  @const82
-00A4  @PSTRINGCN7_60
-00F3  @DIV88
-0108  @PRINTF_U_60
-0065  @const91
-013E  @PSTRINGC7_60
-0073  @const93
-0185  @PRINTF_D_60
-0200  @cinit
+0206  MAIN
+0060  @const82
+00AB  @PSTRINGCN7_60
+00FA  @DIV88
+010F  @PRINTF_U_60
+0069  @const91
+0145  @PSTRINGC7_60
+0077  @const93
+018C  @PRINTF_D_60
+0206  @cinit
 
 
 User Memory space: 
