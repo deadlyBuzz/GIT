@@ -51,11 +51,11 @@
  boolean LED1;                   // Boolean representing LED1
  boolean LED2;                   // Boolean representing LED2 
  boolean LED3;                   // Boolean representing LED3  
+ boolean LED4;                   // Boolean representing LED4
  int ccpVal;                     // Value contained in the CCP register.
  int timer1Val;                  // Value representing Timer 01.
  int timerOflwCount;             // Number of times the timer has overflow                
  int timerOflwCount1;            // Number of times the timer has overflow                
- boolean portBInterrupt;         // Interrupt occurred at Port B
  boolean ccpInterrupt;           // Interrupt occurred for capture compare.
  boolean risingEdge;             // Monitoring the Rising edge or Falling edge of CCP?
                                     
@@ -64,34 +64,16 @@
  * Interrupt routine on change of Port RB
  */
  
-#INT_RB
-void portB_ISR(void)
-{
-   // Clean and Simple... Toggle the LED.
-   if(!portBInterrupt)
-   {
-      LED2= !LED2;
-      portBInterrupt = true;
-   }   
-}
-
 /**   
  * Interrupt routine on Capture Compare detection
  */ 
 #INT_CCP1
 void ccp1_ISR(void)
 {
-   LED2= !LED2; // Robbing the portB LED to see if this is entering each occurrance.
-   // Clean and simple to start... Toggle another LED.
-   if(!ccpInterrupt)
-   {
-      LED3 = !LED3;
-      //ccpInterrupt = true;                    // Don't want to print untul the falling edge/
-      ccpVal = get_timer0();                    // Record the Value of the CCP Register.
-   }
+   LED1= !LED1; 
    // Add the additional maintenance routine here.
-   if(risingEdge)
-   {                                            // Monitoring the rising edge
+   if(risingEdge)                               // Monitoring the rising edge
+   {                                            
       set_timer0(0);                            // Reset the timer to Zero
       timerOflwCount = 0;                       // as well as the overflows.
       timerOflwCount1= 0;
@@ -102,9 +84,14 @@ void ccp1_ISR(void)
    {
       ccpInterrupt = true;                      // Main routine to print the results.
       setup_ccp1(CCP_CAPTURE_RE);               // Start monitoring the Rising Edge again.
-      disable_interrupts(INT_RTCC);             // Disabling the Timer RTCC - No adjust overflows.
+      //disable_interrupts(INT_RTCC);             // Disabling the Timer RTCC - No adjust overflows.
       risingEdge = true;                        // Start monitoring the rising edge
+      ccpVal = get_timer0();                    // Record the Value of the CCP Register.
    }
+   printf("CCP interrupt Detected: %d - %d - %u\r\n",timerOflwCount1,timerOflwCount,ccpVal);
+   output_bit(LPC_DS2,LED2);
+   output_bit(LPC_DS3,LED3);
+
 }
 
 /**
@@ -113,16 +100,24 @@ void ccp1_ISR(void)
 #INT_RTCC
 void rtcc_ISR(void)
 {
-   if(timerOflwCount==128)
+   LED2 != LED2;
+   if(timerOflwCount>=127)
    {
+      LED3 != LED3;
       timerOflwCount = 0;
       timerOflwCount1++;
    }
    else
       timerOflwCount++;
       
-   if(timerOflwCount1 > 127)
+   if(timerOflwCount1 >= 127){
       timerOflwCount1 = 0;
+      LED4 != LED4;
+   }
+   output_bit(LPC_DS2,LED2);
+   output_bit(LPC_DS3,LED3);
+   output_bit(LPC_DS4,LED4);
+
 }
 
 /**
@@ -148,16 +143,18 @@ void main(){
    LED1 = false;
    LED2 = false;
    LED3 = false;
+   LED4 = false;
    counterVal = 0;
    ccpVal = 0;
    output_low(LPC_DS1);
    output_low(LPC_DS2);
    output_low(LPC_DS3);
    output_low(LPC_DS4);
-   
+         
    while(1){        
-      
-      disable_interrupts(INT_RTCC);           // Ensure the RTCC Interrupt is disabled.
+
+/*
+      disable_interrupts(INT_RTCC);          // Ensure the RTCC Interrupt is disabled.
       counterVal++;                          // Increment CounterVal
       if((counterVal&0X80)>0)
          counterVal = 0;                     // Manage overflow.
@@ -165,10 +162,11 @@ void main(){
       printf("Counter at %2u \r\n",counterVal);    // Print out the counter
       LED1 = !LED1;
     
-      // Output the Value of LED1 to ... LED1 funnily enough.
+      // Output the Value of LED1 to LED4.
       output_bit(LPC_DS1,LED1);
       output_bit(LPC_DS2,LED2);
       output_bit(LPC_DS3,LED3);
+      output_bit(LPC_DS4,LED4);   //*/
    
    /*
       if(portBInterrupt)
@@ -176,12 +174,16 @@ void main(){
          printf("Port B interrupt Detected\r\n");
          portBInterrupt = false;
       } //*/
+
+   /*
       if(ccpInterrupt)
       {
          printf("CCP interrupt Detected: %d - %d - %u\r\n",timerOflwCount1,timerOflwCount,ccpVal);
          ccpInterrupt = false;
-      }
-      enable_interrupts(INT_RTCC);           // Re-enable the Timer interrupt
+      }      
+      
+      enable_interrupts(INT_RTCC);           // Re-enable the Timer interrupt */
+      
       delay_ms(1000);                        // Delay a second.      
    }
 }
