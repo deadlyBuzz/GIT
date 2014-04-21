@@ -20,6 +20,8 @@
  *                   HMMMM >>>>]
  *              - Disabled & Re-Enabled the RTCC interrupt between printfs.  Works
  *              - Timer + Overflow are working.
+ *              - Removed the port B references after system was only operating
+                  while port B was held FALSE.
  ***********************************************************************/
 #include <16F690.h>
 #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN
@@ -73,12 +75,13 @@ void portB_ISR(void)
    }   
 }
 
-/**
+/**   
  * Interrupt routine on Capture Compare detection
  */ 
 #INT_CCP1
 void ccp1_ISR(void)
 {
+   LED2= !LED2; // Robbing the portB LED to see if this is entering each occurrance.
    // Clean and simple to start... Toggle another LED.
    if(!ccpInterrupt)
    {
@@ -102,6 +105,9 @@ void ccp1_ISR(void)
       disable_interrupts(INT_RTCC);             // Disabling the Timer RTCC - No adjust overflows.
       risingEdge = true;                        // Start monitoring the rising edge
    }
+   output_bit(LPC_DS2,LED2);
+   output_bit(LPC_DS3,LED3);
+
 }
 
 /**
@@ -131,10 +137,10 @@ void main(){
    setup_timer_0(RTCC_INTERNAL|RTCC_DIV_1);  // Set up Timer 1
    setup_ccp1(CCP_CAPTURE_RE);               // CCP set up for rising edge capture.
    set_tris_a(0x3E);                         // setup port a
-   set_tris_b(0x10);                         // Pin B4 input (Interrupt)
+   //set_tris_b(0x10);                         // Pin B4 input (Interrupt)
    set_tris_c(0x20);                         // setup port c (C5 interrupt pin)
    setup_adc_ports(NO_ANALOGS|VSS_VDD);      // No Analog signals      
-   enable_interrupts(INT_RB);
+   //enable_interrupts(INT_RB);
    enable_interrupts(INT_CCP1);              // Enable Capture Compare Interrupts.
    enable_interrupts(INT_RTCC);              // Enable real time counter overflow <<<< This is causeing the RS232 issue to go apeshit.
    enable_interrupts(GLOBAL);                // Enable Global Interrupts
@@ -166,12 +172,13 @@ void main(){
       output_bit(LPC_DS1,LED1);
       output_bit(LPC_DS2,LED2);
       output_bit(LPC_DS3,LED3);
-      
+   
+   /*
       if(portBInterrupt)
       {
          printf("Port B interrupt Detected\r\n");
          portBInterrupt = false;
-      }
+      } //*/
       if(ccpInterrupt)
       {
          printf("CCP interrupt Detected: %d - %d - %u\r\n",timerOflwCount1,timerOflwCount,ccpVal);
