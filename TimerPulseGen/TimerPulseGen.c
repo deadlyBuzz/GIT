@@ -1,27 +1,11 @@
 /*********************************************************************** 
- * This works!
- * <<<< Found the issue.>>>>
  * Author:  Alan Curley
- * Date:    12 SEP 2013
- * Program: serialTest.C            Version:    1.0
- * Purpose:    This program is a simple test program that tests and outlines
- *             a program that will communicate with the PicKit2 programmer
- *             via the P1 connector using the LPC Demo board.
- *             This way, the PicKit can be left connected to the programming
- *             port for programming and serial communication testing.
- *              - Added interrupt for driving LEDs  to determine what happens
- *                to serial output.
- *              - Added a routine for outputting a string on interrupt from 
- *                port B.
- *              - Change/Add Capture compare routine to Trigger message send.
- *             <<<<  Added the RTCC Interrupts and the RS232 text came out as Jargon.
- *                   Left the data all the same but disabled the RTCC Interrupts
- *                   and the Text becomes clear again.
- *                   HMMMM >>>>]
- *              - Disabled & Re-Enabled the RTCC interrupt between printfs.  Works
- *              - Timer + Overflow are working.
- *              - Removed the port B references after system was only operating
-                  while port B was held FALSE.
+ * Date:    21 APR 2014
+ * Program: TimerPulseGen.C            Version:    1.0
+ * Purpose:    This program is a simple test program that will generate
+ * 			a Pulse for a given time based on the value of the POT.
+ * 			This will be initially based on the LPC board but upgraded as the
+ * 			LPC Board will be needed for the measurement.
  ***********************************************************************/
 #include <16F690.h>
 #FUSES  NOWDT, INTRC_IO, NOMCLR, BROWNOUT, NOCPD, NOPUT, NOIESO, NOFCMEN
@@ -47,7 +31,6 @@
 #define CCP1_PIN                 PIN_C5
 
 //------------------------- Local Variables ------------------------------
- int counterVal;                 // A Counter to demonstrate the functionality
  boolean LED1;                   // Boolean representing LED1
  boolean LED2;                   // Boolean representing LED2 
  boolean LED3;                   // Boolean representing LED3  
