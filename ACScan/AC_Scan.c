@@ -54,11 +54,14 @@ short Count_Done = 0;
 long  Pulse_Time = 0;
 long  Pulse_Overflow = 0;
 long  T1_Overflow = 0;
+short timing = 0;
+long  measureCount = 0;
+
 ///////////////////////////////////////////////////////////////////////////////
 #INT_RTCC                              // 1 interrupt every 1ms
 void clock_isr(void)
 {
-  set_rtcc(0-467);                     // 48,000,000/4/256/47 = 100.160 Hz
+  set_rtcc(47);                     // 48,000,000/4/256/47 = 100.160 Hz // <<<<Assuming 0-467 is incorrect?
      
   if(timer_10s)                        // if timer has value 
     timer_10s--;                       // decrement timer
@@ -72,28 +75,34 @@ void isr()
 }
 ///////////////////////////////////////////////////////////////////////////////
 #INT_CCP1
-void ccp1_isr()
+void ccp1_isr() // Captures the rising edge of CCP1 pin.
 { 
-    set_timer1(0);
-    T1_Overflow = 0;
-    Pulse_Time = 0;
-    
-    output_high(BLUE_LED);
+    if(timing==FALSE){ // only do this on the edge, any bouncing will reset timers etc.
+        set_timer1(0);
+        T1_Overflow = 0;
+        Pulse_Time = 0;
+        timing = 1;     // Set flag to indicate timing.
+        output_high(BLUE_LED);
+    }
 }
 ///////////////////////////////////////////////////////////////////////////////
 #INT_CCP2
-void ccp2_isr() //<<<< Multiple triggers here seem to interfere with output.  
-                //      Maybe lock it out on a flag?
-{
-    if(Count_Done == FALSE)
-    {
-        Count_Done = TRUE;
-        CCP1_Count = CCP_1;
-        CCP2_Count = CCP_2;        
-        Pulse_Time = (CCP2_Count - CCP1_Count);
-        Pulse_Overflow = T1_Overflow;
+void ccp2_isr()                 
+{   
+    if(timing == TRUE){ // only output this when preceded by CCP1
+        if(Count_Done == FALSE)
+        {
+            Count_Done = TRUE;
+            CCP1_Count = CCP_1;
+            CCP2_Count = CCP_2;        
+            //Pulse_Time = (CCP2_Count - CCP1_Count); //CCP1 is irrellevant as the timer has been reset in the associated interrupt
+            Pulse_time = CCP_2;
+            Pulse_Overflow = T1_Overflow;
+            measureCount++;     // increment the number of measures.
+        }
+        output_low(BLUE_LED);
+        timing = FALSE;
     }
-    output_low(BLUE_LED);    
 }
 ///////////////////////////////////////////////////////////////////////////////
 void main(void) 
@@ -135,12 +144,13 @@ void main(void)
     
     while(TRUE)                        // do forever while connected
     {       
-       usb_task();                          // keep usb alive    //<<<< Has to be done every cycle
+       usb_task(); // keep usb alive    //<<<< Has to be done every cycle
        if(Count_Done == TRUE)
        {
-           printf(usb_cdc_putc, "Time: %lu us\r\n", pulse_time/5 );     // divide by 5 as resolution is 5.2 nano seconds max //<<<< Needs to be corrected to "*5.2" instead of "/5"
-           printf(usb_cdc_putc, "Overflow: %lu pu\r\n", pulse_overflow);  // divide by 5 as resolution is 5.2 nano seconds max, this is (T1 overflow/5)       
-           printf(usb_cdc_putc, "CCP1:%lu CCP2:%lu\r\n", CCP1_Count, CCP2_Count);
+//           printf(usb_cdc_putc, "Time: %lu us\r\n", pulse_time/5 );     // divide by 5 as resolution is 5.2 nano seconds max //<<<< Needs to be corrected to "*5.2" instead of "/5"
+//           printf(usb_cdc_putc, "Overflow: %lu pu\r\n", pulse_overflow);  // divide by 5 as resolution is 5.2 nano seconds max, this is (T1 overflow/5)       
+//           printf(usb_cdc_putc, "CCP1:%lu CCP2:%lu\r\n", CCP1_Count, CCP2_Count);
+             printf(usb_cdc_putc, "%lu , %lu ,  %lu \r\n",measureCount, pulse_time, pulse_overflow);
            Count_Done = FALSE;
        }
 //       if((usb_state == USB_STATE_ATTACHED)&&(!UCON_SE0))             
@@ -161,14 +171,19 @@ void main(void)
           {
             output_low(GREEN_LED);                        
             output_high(RED_LED);                    //<<<< Menu options to be updated.            
-            printf(usb_cdc_putc,"1. Menu Option 1\r\n");                          // <<<< output not operating.
-            printf(usb_cdc_putc,"2. Menu Option 2\r\n");                                      
-            printf(usb_cdc_putc,"3. Menu Option 3\r\n");                                      
-            printf(usb_cdc_putc,"4. Menu Option 4\r\n");                                      
+            printf(usb_cdc_putc,"1. Menu Option 1 - Clear counters.\r\n");                          // <<<< output not operating.
+//            printf(usb_cdc_putc,"2. Menu Option 2\r\n");                                      
+//            printf(usb_cdc_putc,"3. Menu Option 3\r\n");                                      
+//            printf(usb_cdc_putc,"4. Menu Option 4\r\n");                                      
             output_low(RED_LED);                        
             output_high(GREEN_LED);           
             delay_ms(250);            
           }
+          else if(c=='1'){
+            printf(usb_cdc_putc,"-------------------------------------------------\r\n");
+            printf(usb_cdc_putc,"count,timer1,overflow\r\n");
+            measureCount = 0;
+          }          
        }             
    }
 }
