@@ -47,6 +47,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 char  c = 0;
 
+#byte osctune = 0xF9B // Oscillator tuning variable.
 long  timer_10s = 0;
 long  CCP1_Count = 0;
 long  CCP2_Count = 0;
@@ -56,6 +57,8 @@ long  Pulse_Overflow = 0;
 long  T1_Overflow = 0;
 short timing = 0;
 long  measureCount = 0;
+int   oscTuneSP = 0;
+int   oscTuneTmp = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 #INT_RTCC                              // 1 interrupt every 1ms
@@ -150,7 +153,7 @@ void main(void)
 //           printf(usb_cdc_putc, "Time: %lu us\r\n", pulse_time/5 );     // divide by 5 as resolution is 5.2 nano seconds max //<<<< Needs to be corrected to "*5.2" instead of "/5"
 //           printf(usb_cdc_putc, "Overflow: %lu pu\r\n", pulse_overflow);  // divide by 5 as resolution is 5.2 nano seconds max, this is (T1 overflow/5)       
 //           printf(usb_cdc_putc, "CCP1:%lu CCP2:%lu\r\n", CCP1_Count, CCP2_Count);
-             printf(usb_cdc_putc, "%lu , %lu ,  %lu \r\n",measureCount, pulse_time, pulse_overflow);
+             printf(usb_cdc_putc, "%lu , %lu ,  %lu, %x \r\n",measureCount, pulse_time, pulse_overflow, osctune);
            Count_Done = FALSE;
        }
 //       if((usb_state == USB_STATE_ATTACHED)&&(!UCON_SE0))             
@@ -171,8 +174,13 @@ void main(void)
           {
             output_low(GREEN_LED);                        
             output_high(RED_LED);                    //<<<< Menu options to be updated.            
-            printf(usb_cdc_putc,"1. Menu Option 1 - Clear counters.\r\n");                          // <<<< output not operating.
-//            printf(usb_cdc_putc,"2. Menu Option 2\r\n");                                      
+            printf(usb_cdc_putc,"Press '1' - Clear counters.\r\n");                          // <<<< output not operating.
+            printf(usb_cdc_putc,"Press '+' to increment OSCTUNE by 1\r\n");                                      
+            printf(usb_cdc_putc,"Press ']' to increment OSCTUNE by 4\r\n");                                      
+            printf(usb_cdc_putc,"Press '[' to decrement OSCTUNE by 4\r\n");                                      
+            printf(usb_cdc_putc,"Press '-' to decrement OSCTUNE by 1\r\n");                                      
+            printf(usb_cdc_putc,"Press 'X' to set OSCTUNE to Max \r\n");                                      
+            printf(usb_cdc_putc,"Press 'N' to set OSCTUNE to Min \r\n");                                      
 //            printf(usb_cdc_putc,"3. Menu Option 3\r\n");                                      
 //            printf(usb_cdc_putc,"4. Menu Option 4\r\n");                                      
             output_low(RED_LED);                        
@@ -181,9 +189,34 @@ void main(void)
           }
           else if(c=='1'){
             printf(usb_cdc_putc,"-------------------------------------------------\r\n");
-            printf(usb_cdc_putc,"count,timer1,overflow\r\n");
+            printf(usb_cdc_putc,"count,timer1,overflow,OscTune\r\n");
             measureCount = 0;
           }          
+          else if(c=='+'){
+            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP++)&0x1F);            
+            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          }
+          else if(c=='-'){
+            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP--)&0x1F);            
+            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          else if(c=='['){
+            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP-4)&0x1F);            
+            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          }
+          else if(c==']'){
+            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP+4)&0x1F);
+            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          }
+          else if(c=='N'){
+            oscTuneTmp = 0X10;
+            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          }
+          else if(c=='X'){
+            oscTuneTmp = 0X0F;
+            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          }
+
+         osctune = oscTuneTmp;
        }             
    }
 }
