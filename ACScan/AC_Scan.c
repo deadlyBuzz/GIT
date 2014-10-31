@@ -57,8 +57,10 @@ long  Pulse_Overflow = 0;
 long  T1_Overflow = 0;
 short timing = 0;
 long  measureCount = 0;
+long  startCount = 0;
 int   oscTuneSP = 0;
 int   oscTuneTmp = 0;
+long  mode = 2;
 
 ///////////////////////////////////////////////////////////////////////////////
 #INT_RTCC                              // 1 interrupt every 1ms
@@ -80,31 +82,67 @@ void isr()
 #INT_CCP1
 void ccp1_isr() // Captures the rising edge of CCP1 pin.
 { 
-    if(timing==FALSE){ // only do this on the edge, any bouncing will reset timers etc.
-        set_timer1(0);
-        T1_Overflow = 0;
-        Pulse_Time = 0;
-        timing = 1;     // Set flag to indicate timing.
-        output_high(BLUE_LED);
+    switch(mode){
+        case 1: // CCP1 RE to CCP2 RE
+        case 2: // CCP1 RE to CCP2 FE
+        if(timing==FALSE){ // only do this on the edge, any bouncing will reset timers etc.
+            set_timer1(0);
+            T1_Overflow = 0;
+            Pulse_Time = 0;
+            timing = 1;     // Set flag to indicate timing.
+            output_high(BLUE_LED);
+            startCount++;
+        }
+        break;
+        case 3:             // CCP1 RE - FE
+        if(timing==FALSE){         // Capturing the Rising Edge   
+            set_timer1(0);
+            T1_Overflow = 0;
+            Pulse_Time = 0;
+            timing = 1;
+            output_high(BLUE_LED);
+            startCount++;
+            setup_ccp1(CCP_CAPTURE_FE);        // Configure CCP1 to capture rising edge
+        }
+        else{   // timing = TRUE. This is the falling edge detected
+            if(Count_Done == FALSE){                
+                Count_Done = TRUE;
+                CCP1_Count = CCP_1;
+                CCP2_Count = CCP_2;        
+                Pulse_time = CCP_2;
+                Pulse_Overflow = T1_Overflow;
+                measureCount++;
+                setup_ccp1(CCP_CAPTURE_RE); // reset this up to capture the falling edge                
+            }
+            timing = FALSE; 
+            output_low(BLUE_LED);
+        }
+        
+        break;
     }
 }
 ///////////////////////////////////////////////////////////////////////////////
 #INT_CCP2
 void ccp2_isr()                 
 {   
-    if(timing == TRUE){ // only output this when preceded by CCP1
-        if(Count_Done == FALSE)
-        {
-            Count_Done = TRUE;
-            CCP1_Count = CCP_1;
-            CCP2_Count = CCP_2;        
-            //Pulse_Time = (CCP2_Count - CCP1_Count); //CCP1 is irrellevant as the timer has been reset in the associated interrupt
-            Pulse_time = CCP_2;
-            Pulse_Overflow = T1_Overflow;
-            measureCount++;     // increment the number of measures.
+    switch(mode){
+        case 1:
+        case 2: // CCP1 RE to CCP2 RE,FE
+        if(timing == TRUE){ // only output this when preceded by CCP1
+            if(Count_Done == FALSE)
+            {
+                Count_Done = TRUE;
+                CCP1_Count = CCP_1;
+                CCP2_Count = CCP_2;        
+                //Pulse_Time = (CCP2_Count - CCP1_Count); //CCP1 is irrellevant as the timer has been reset in the associated interrupt
+                Pulse_time = CCP_2;
+                Pulse_Overflow = T1_Overflow;
+                measureCount++;     // increment the number of measures.
+            }
+            output_low(BLUE_LED);
+            timing = FALSE;
         }
-        output_low(BLUE_LED);
-        timing = FALSE;
+        break;
     }
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -150,11 +188,8 @@ void main(void)
        usb_task(); // keep usb alive    //<<<< Has to be done every cycle
        if(Count_Done == TRUE)
        {
-//           printf(usb_cdc_putc, "Time: %lu us\r\n", pulse_time/5 );     // divide by 5 as resolution is 5.2 nano seconds max //<<<< Needs to be corrected to "*5.2" instead of "/5"
-//           printf(usb_cdc_putc, "Overflow: %lu pu\r\n", pulse_overflow);  // divide by 5 as resolution is 5.2 nano seconds max, this is (T1 overflow/5)       
-//           printf(usb_cdc_putc, "CCP1:%lu CCP2:%lu\r\n", CCP1_Count, CCP2_Count);
-             printf(usb_cdc_putc, "%lu , %lu ,  %lu, %x \r\n",measureCount, pulse_time, pulse_overflow, osctune);
-           Count_Done = FALSE;
+            printf(usb_cdc_putc, "%lu , %lu , %lu , %lu ,  %lu, %x \r\n",mode, startCount, measureCount, pulse_time, pulse_overflow, osctune);
+            Count_Done = FALSE;
        }
 //       if((usb_state == USB_STATE_ATTACHED)&&(!UCON_SE0))             
        if(usb_state == USB_STATE_CONFIGURED)            
@@ -174,46 +209,36 @@ void main(void)
           {
             output_low(GREEN_LED);                        
             output_high(RED_LED);                    //<<<< Menu options to be updated.            
-            printf(usb_cdc_putc,"Press '1' - Clear counters.\r\n");                          // <<<< output not operating.
-            printf(usb_cdc_putc,"Press '+' to increment OSCTUNE by 1\r\n");                                      
-            printf(usb_cdc_putc,"Press ']' to increment OSCTUNE by 4\r\n");                                      
-            printf(usb_cdc_putc,"Press '[' to decrement OSCTUNE by 4\r\n");                                      
-            printf(usb_cdc_putc,"Press '-' to decrement OSCTUNE by 1\r\n");                                      
-            printf(usb_cdc_putc,"Press 'X' to set OSCTUNE to Max \r\n");                                      
-            printf(usb_cdc_putc,"Press 'N' to set OSCTUNE to Min \r\n");                                      
-//            printf(usb_cdc_putc,"3. Menu Option 3\r\n");                                      
-//            printf(usb_cdc_putc,"4. Menu Option 4\r\n");                                      
+            printf(usb_cdc_putc,"Press 'C' - Clear counters.\r\n");                          // <<<< output not operating.
+            printf(usb_cdc_putc,"Press '1' - Select RE on CCP1 to RE on CCP2.\r\n");                          // <<<< output not operating.
+            printf(usb_cdc_putc,"Press '2' - Select RE on CCP1 to FE on CCP2.\r\n");
+            printf(usb_cdc_putc,"Press '3' - Select RE to FE on CCP1.\r\n");
             output_low(RED_LED);                        
             output_high(GREEN_LED);           
             delay_ms(250);            
           }
-          else if(c=='1'){
+          else if(c=='C'){
             printf(usb_cdc_putc,"-------------------------------------------------\r\n");
-            printf(usb_cdc_putc,"count,timer1,overflow,OscTune\r\n");
+            printf(usb_cdc_putc,"mode,startCount,measureCount,timer1,overflow,OscTune\r\n");
             measureCount = 0;
+            startCount = 0;
           }          
-          else if(c=='+'){
-            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP++)&0x1F);            
-            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          else if(c=='1'){ // CCP1 RE to CCP2 RE
+            printf(usb_cdc_putc,"CCP1 Rising Edge to CCP2 Rising Edge timing Selected.\r\n");
+            mode = 1;
+            setup_ccp1(CCP_CAPTURE_RE);
+            setup_ccp2(CCP_CAPTURE_RE);
           }
-          else if(c=='-'){
-            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP--)&0x1F);            
-            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
-          else if(c=='['){
-            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP-4)&0x1F);            
-            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          else if(c=='2'){ // CCP1 RE to CCP2 FE
+            printf(usb_cdc_putc,"CCP1 Rising Edge to CCP2 Falling Edge timing Selected.\r\n");
+            mode = 2;
+            setup_ccp1(CCP_CAPTURE_RE);
+            setup_ccp2(CCP_CAPTURE_FE);
           }
-          else if(c==']'){
-            oscTuneTmp = ((oscTuneTmp&0XE0))|((oscTuneSP+4)&0x1F);
-            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
-          }
-          else if(c=='N'){
-            oscTuneTmp = 0X10;
-            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
-          }
-          else if(c=='X'){
-            oscTuneTmp = 0X0F;
-            printf(usb_cdc_putc,"OSCTune set to %X",osctune);                                      
+          else if(c=='3'){ // CCP1 RE to CCP1 FE        
+            printf(usb_cdc_putc,"CCP1 Rising Edge to CCP1 Falling Edge timing Selected.\r\n");
+            mode = 3;
+            setup_ccp1(CCP_CAPTURE_RE);                        
           }
 
          osctune = oscTuneTmp;
