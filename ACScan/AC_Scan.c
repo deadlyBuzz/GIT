@@ -109,7 +109,7 @@ void ccp1_isr() // Captures the rising edge of CCP1 pin.
                 Count_Done = TRUE;
                 CCP1_Count = CCP_1;
                 CCP2_Count = CCP_2;        
-                Pulse_time = CCP_2;
+                Pulse_time = CCP_1;  // Changed to 1.
                 Pulse_Overflow = T1_Overflow;
                 measureCount++;
                 setup_ccp1(CCP_CAPTURE_RE); // reset this up to capture the falling edge                
@@ -117,7 +117,17 @@ void ccp1_isr() // Captures the rising edge of CCP1 pin.
             timing = FALSE; 
             output_low(BLUE_LED);
         }
-        
+        break;
+        case 4:
+        if(Count_Done==FALSE){
+            Count_Done = TRUE;
+            CCP1_COUNT = CCP_1;
+            Pulse_time = CCP_1;
+            Pulse_Overflow = T1_OverFlow;
+            measureCount++;
+            output_low(BLUE_LED);
+        }
+            
         break;
     }
 }
@@ -168,7 +178,7 @@ void main(void)
     enable_interrupts(INT_CCP1);       // Setup interrupt on rising edge
     enable_interrupts(INT_CCP2);       // Setup interrupt on rising edge
     enable_interrupts(INT_TIMER0);     // enable real time clock interrupt      
-    enable_interrupts(INT_TIMER1);     // enable timer 1 interrupts
+    enable_interrupts(INT_TIMER1);     // enable timer 1 interrupts`x
     enable_interrupts(GLOBAL);         // enable global interrupts                  
     set_rtcc(0);                       // clear rtcc to 0
     delay_ms(1500);
@@ -213,7 +223,8 @@ void main(void)
             printf(usb_cdc_putc,"Press '1' - Select RE on CCP1 to RE on CCP2.\r\n");                          // <<<< output not operating.
             printf(usb_cdc_putc,"Press '2' - Select RE on CCP1 to FE on CCP2.\r\n");
             printf(usb_cdc_putc,"Press '3' - Select RE to FE on CCP1.\r\n");
-            output_low(RED_LED);                        
+            printf(usb_cdc_putc,"Press '4' - Select Echo mode - single instance.\r\n");
+            output_low(RED_LED);
             output_high(GREEN_LED);           
             delay_ms(250);            
           }
@@ -239,6 +250,26 @@ void main(void)
             printf(usb_cdc_putc,"CCP1 Rising Edge to CCP1 Falling Edge timing Selected.\r\n");
             mode = 3;
             setup_ccp1(CCP_CAPTURE_RE);                        
+          }
+          else if(c=="4"){ // Pulse mode  O/P to Delta CCP1
+            printf(usb_cdc_putc,"one shot measure of Output to CCP1 Change.\r\n");
+            mode = 4;
+            output_low(PLC_OUT1); // Start by Resetting the PLC Output.
+            delay_ms(200); // wait for a response (if any) from the PLC.
+            if(input(PLC_IN1)) // check the status of the input
+                setup_ccp1(CCP_CAPTURE_FE); // Set up the PLC to capture the rising edge.
+            else
+                setup_ccp1(CCP_CAPTURE_RE); // Set up the PLC to capture the rising edge.
+            set_timer1(0); // Clear the timer 1 Value
+            T1_Overflow = 0; // Clear the overflow count
+            Pulse_Time = 0; // clear the pulse time value
+            Count_Done = FALSE; // Clear the "TIMING" Flag
+            delay_ms(200); // Wait 200ms;
+            output_high(PLC_OUT1);  // Set the PLC to Output High.
+            output_high(BLUE_LED);// Signal to the board that we are now timing.
+            startCount++; // increment the amount of pulse times.
+            delay_ms(200); // Wait 200ms;
+            output_low(PLC_OUT1);
           }
 
          osctune = oscTuneTmp;
