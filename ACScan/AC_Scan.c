@@ -64,6 +64,7 @@ int   oscTuneTmp = 0;
 long  mode = 2;
 short opModeInverted = 0; // output matches the input.
 short newTrigger = 0;   // Signal to indicate a new trigger is allowed.
+short opValue = 0; // signal to represent the output value.
 
 ///////////////////////////////////////////////////////////////////////////////
 #INT_RTCC                              // 1 interrupt every 1ms
@@ -185,18 +186,21 @@ void main(void)
           }          
           else if(c=='1'){ // Response mode.
             printf(usb_cdc_putc,"Cycle response to Toggle mode Selected.\r\n");
+            if(mode!=1)
+                newTrigger = 1;
             mode = 1;                   
           }
           else if(c=='2'){ // CCP1 RE to FE
             printf(usb_cdc_putc,"CCP1 Rising Edge to Falling Edge timing Selected.\r\n");
             mode = 2;
-            setup_ccp1(CCP_CAPTURE_RE); // start with a rising edge.
+            setup_ccp1(CCP_CAPTURE_RE); // start with a rising edge.            
           }
           else if(c=='3'){ // CCP1 RE to CCP2 RE        
             printf(usb_cdc_putc,"CCP1 Rising Edge to CCP2 Rising Edge timing Selected.\r\n");
             mode = 3;
             setup_ccp1(CCP_CAPTURE_RE);                        
             setup_ccp2(CCP_CAPTURE_RE);                        
+            enable_interrupts(INT_CCP2);
           }
        }
        if(mode==1){ // manage the I/O capture.
@@ -204,15 +208,19 @@ void main(void)
                 newTrigger = 0; // Clear the new trigger request.
                 set_timer1(0); // Reset the Timer.
                 T1_Overflow = 0; // Clear the overflow counts for the timer.
-                pulse_time = 0; // Clear the current value.
-                output_toggle(PLC_OUT1); // Toggle the output pin.
+                pulse_time = 0; // Clear the current value.                
                 output_high(BLUE_LED); // Flag to the board that the OP toggle has taken place and we're waiting for a response.
-                enable_interrupts(INT_CCP1); // Re-enable the CCP1 Interrupts.
-                if(input(PLC_IN1)){
+                enable_interrupts(INT_CCP1); // Re-enable the CCP1 Interrupts.                
+                if(opValue==1){
+                    output_low(PLC_OUT1);
+                    opValue = 0;
                     setup_ccp1(CCP_CAPTURE_FE); // input is currently high - trigger to capture the falling edge.
                 }else{
+                    output_high(PLC_OUT1);
                     setup_ccp1(CCP_CAPTURE_RE); // input is currently low  - trigger to capture the rising edge.
+                    opValue = 1;
                 }
+                startCount++;
             }
        }
    }
